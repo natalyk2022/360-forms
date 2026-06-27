@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Оценка 360° — форма для лида (HR-функция)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --hard:#E8A33D;
+    --hard-soft:#E8A33D1A;
+    --soft:#3DD9A8;
+    --soft-soft:#3DD9A81A;
+    --danger:#E0556B;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:280px 1fr 280px;
+    max-width:1320px;
+    margin:0 auto;
+    min-height:100vh;
+  }
+  @media (max-width: 980px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar, .preview-panel{display:none;}
+  }
+
+  /* ===== SIDEBAR (progress) ===== */
+  .sidebar{
+    padding:40px 24px;
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .brand{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text-dim);
+    letter-spacing:.02em;
+    margin-bottom:36px;
+  }
+  .brand span{color:var(--accent);}
+  .steps{display:flex; flex-direction:column; gap:4px;}
+  .step{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:13px;
+    color:var(--text-faint);
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .step:hover{background:var(--panel);}
+  .step.active{background:var(--accent-soft); color:var(--text);}
+  .step.done{color:var(--text-dim);}
+  .step-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--text-faint);
+    flex-shrink:0;
+  }
+  .step.active .step-dot{background:var(--accent);}
+  .step.done .step-dot{background:var(--soft);}
+
+  /* ===== MAIN ===== */
+  .main{
+    padding:48px 40px 120px;
+    max-width:680px;
+  }
+  .header{margin-bottom:40px;}
+  .eyebrow{
+    font-size:12px;
+    font-weight:600;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:32px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:12px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; max-width:520px;}
+
+  .field-group{margin-bottom:32px;}
+  label.meta-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  input[type=text], select{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus, select:focus{border-color:var(--accent);}
+  select{appearance:none; cursor:pointer;}
+
+  section.block{
+    margin-bottom:44px;
+    padding-top:8px;
+  }
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:6px;
+  }
+  .block-tag{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    padding:3px 9px;
+    border-radius:6px;
+  }
+  .block-tag.hard{background:var(--hard-soft); color:var(--hard);}
+  .block-tag.soft{background:var(--soft-soft); color:var(--soft);}
+  .block-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    font-weight:600;
+  }
+  .block-desc{
+    color:var(--text-dim);
+    font-size:14px;
+    margin-bottom:24px;
+    max-width:540px;
+  }
+
+  .skill-row{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:12px;
+  }
+  .skill-row-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:4px;
+    gap:12px;
+  }
+  .skill-name{font-size:15px; font-weight:600;}
+  .skill-value{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    font-weight:700;
+    min-width:34px;
+    text-align:right;
+  }
+  .skill-row.hard .skill-value{color:var(--hard);}
+  .skill-row.soft .skill-value{color:var(--soft);}
+  .skill-desc{
+    font-size:13px;
+    color:var(--text-faint);
+    margin-bottom:14px;
+    line-height:1.45;
+  }
+  input[type=range]{
+    width:100%;
+    -webkit-appearance:none;
+    height:6px;
+    border-radius:4px;
+    background:var(--line);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--text);
+    cursor:pointer;
+    border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--line);
+  }
+  .skill-row.hard input[type=range]::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--hard);}
+  .skill-row.soft input[type=range]::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--soft);}
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text-faint);
+    margin-top:6px;
+  }
+
+  textarea{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:14px 16px;
+    border-radius:10px;
+    outline:none;
+    resize:vertical;
+    min-height:90px;
+    transition:border-color .15s;
+  }
+  textarea:focus{border-color:var(--accent);}
+
+  .nav-buttons{
+    display:flex;
+    gap:12px;
+    margin-top:8px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:14px 26px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    transition:opacity .15s, transform .1s;
+  }
+  button:active{transform:scale(.98);}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover{opacity:.9;}
+  .btn-ghost{background:transparent; color:var(--text-dim); border:1px solid var(--line);}
+  .btn-ghost:hover{color:var(--text);}
+  .btn-submit{
+    background:linear-gradient(135deg, var(--accent), #6E5CE8);
+    color:#fff;
+    width:100%;
+    padding:16px;
+    font-size:15px;
+  }
+
+  .role-picker{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .role-chip{
+    padding:10px 18px;
+    border-radius:30px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text-dim);
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .role-chip.selected{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+
+  .hidden{display:none !important;}
+
+  /* ===== PREVIEW (radar) ===== */
+  .preview-panel{
+    padding:40px 24px;
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+  }
+  .preview-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px;
+  }
+  .preview-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:4px;
+  }
+  .preview-sub{font-size:12px; color:var(--text-faint); margin-bottom:16px;}
+  #radar{width:100%; height:auto;}
+  .legend{display:flex; gap:16px; margin-top:12px; font-size:12px; color:var(--text-dim);}
+  .legend-item{display:flex; align-items:center; gap:6px;}
+  .legend-dot{width:8px; height:8px; border-radius:50%;}
+
+  .done-screen{
+    text-align:center;
+    padding:100px 20px;
+  }
+  .done-icon{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--soft-soft);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="brand">360° <span>самооценка</span></div>
+    <div class="steps" id="stepsNav">
+      <div class="step active" data-step="0"><span class="step-dot"></span>Профиль</div>
+      <div class="step" data-step="1"><span class="step-dot"></span>Hard skills</div>
+    </div>
+  </nav>
+
+  <!-- MAIN FORM -->
+  <main class="main">
+
+    <form id="surveyForm">
+
+      <!-- STEP 0: PROFILE -->
+      <div class="step-page" data-page="0">
+        <div class="header">
+          <div class="eyebrow">Шаг 1 из 2</div>
+          <h1>Кого ты оцениваешь?</h1>
+          <p class="subtitle">Эта оценка — часть цикла Performance Review. Она сравнивается с самооценкой сотрудника и оценкой коллег, чтобы понять реальные зоны роста.</p>
+        </div>
+
+        <div class="field-group">
+          <label class="meta-label">Твоё имя (лид)</label>
+          <input type="text" id="leadName" placeholder="Например, Мария Соколова" required>
+        </div>
+
+        <div class="field-group">
+          <label class="meta-label">Имя сотрудника, которого оцениваешь</label>
+          <input type="text" id="name" placeholder="Например, Анна Петрова" required>
+        </div>
+
+        <div class="field-group">
+          <label class="meta-label">Роль сотрудника</label>
+          <div class="role-picker" id="rolePicker">
+            <div class="role-chip" data-role="hrops">HR Operations</div>
+            <div class="role-chip" data-role="hrgen">HR Generalist</div>
+            <div class="role-chip" data-role="hrmkt">HR Marketolog</div>
+            <div class="role-chip" data-role="recruiter">Recruiter</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="meta-label">Дата заполнения</label>
+          <input type="text" id="dateField" readonly>
+        </div>
+
+        <div class="nav-buttons">
+          <button type="button" class="btn-primary" onclick="goToStep(1)">Продолжить →</button>
+        </div>
+      </div>
+
+      <!-- STEP 1: HARD SKILLS -->
+      <div class="step-page hidden" data-page="1">
+        <div class="header">
+          <div class="eyebrow">Шаг 2 из 2</div>
+          <h1>Hard skills</h1>
+          <p class="subtitle">Оцени уровень сотрудника по каждому навыку от 0 до 10. 0 — навык не проявляется, 10 — экспертный уровень, может обучать других.</p>
+        </div>
+
+        <section class="block">
+          <div class="block-head">
+            <span class="block-tag hard">Hard skills</span>
+            <span class="block-title" id="hardBlockTitle">Навыки роли</span>
+          </div>
+          <p class="block-desc" id="hardBlockDesc">Выбери роль сотрудника на предыдущем шаге, чтобы увидеть соответствующие навыки.</p>
+          <div id="hardSkillsContainer"></div>
+        </section>
+
+        <div class="nav-buttons" style="margin-bottom:16px;">
+          <button type="button" class="btn-ghost" onclick="goToStep(0)">← Назад</button>
+        </div>
+        <button type="button" class="btn-submit" onclick="submitForm()">Отправить оценку</button>
+      </div>
+
+      <!-- DONE SCREEN -->
+      <div class="step-page hidden done-screen" data-page="done">
+        <div class="done-icon">✓</div>
+        <h1>Спасибо!</h1>
+        <p class="subtitle" style="margin:0 auto;">Оценка сохранена. Результаты появятся в дашборде HRBP после сбора самооценки и оценки коллег.</p>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- PREVIEW PANEL -->
+  <aside class="preview-panel">
+    <div class="preview-card">
+      <div class="preview-title">Твой профиль</div>
+      <div class="preview-sub">Обновляется по мере заполнения</div>
+      <svg id="radar" viewBox="0 0 240 240"></svg>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--hard)"></span>Hard skills</div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ====== DATA: COMPETENCIES BY ROLE (из матриц грейдинга) ====== */
+const HARD_SKILLS = {
+  hrops: {
+    title: "HR Operations",
+    desc: "Кадровое делопроизводство, C&B и HR-автоматизация",
+    skills: [
+      { id:"hrops_kdp", name:"Кадровое делопроизводство и ТК", desc:"Ведение КДП, контроль соблюдения трудового кодекса, аудит ЛНА" },
+      { id:"hrops_benefits", name:"Администрирование льгот и ДМС", desc:"Пакет бенефитов, обзоры рынка зарплат, статистика по штату" },
+      { id:"hrops_systems", name:"HR-системы и автоматизация", desc:"HRM-системы, электронный документооборот, интеграции между ИТ-системами" },
+      { id:"hrops_cb", name:"C&B и грейдирование", desc:"Система грейдов, вилки зарплат, бонусные схемы (KPI), управление ФОТ" },
+      { id:"hrops_bi", name:"BI-дашборды и отчётность", desc:"Комплексные дашборды, расчёт экономической эффективности HR" },
+    ]
+  },
+  hrgen: {
+    title: "HR Generalist",
+    desc: "Адаптация, Performance Review и управление талантами",
+    skills: [
+      { id:"hrgen_onboarding", name:"Онбординг и адаптация", desc:"Welcome-встречи, регулярные 1-1, проектирование системы адаптации" },
+      { id:"hrgen_pr", name:"Performance Review", desc:"Запуск циклов оценки, калибровочные сессии, связка с грейдированием" },
+      { id:"hrgen_talent", name:"Talent Management", desc:"Планы развития (IDP), система преемственности, управление изменениями" },
+      { id:"hrgen_conflict", name:"Разрешение конфликтов", desc:"Фасилитация командных сессий, консультирование лидов по управлению людьми" },
+      { id:"hrgen_retention", name:"Retention-аналитика", desc:"Анализ причин увольнений, exit-интервью, работа с результатами опросов" },
+    ]
+  },
+  hrmkt: {
+    title: "HR Marketolog",
+    desc: "HR-бренд, employer branding и привлечение кандидатов",
+    skills: [
+      { id:"hrmkt_evp", name:"EVP и HR-бренд", desc:"Формирование EVP, контроль консистентности бренда работодателя" },
+      { id:"hrmkt_content", name:"Контент и соцсети работодателя", desc:"Контент-план, кейсы сотрудников, видео и карьерный сайт" },
+      { id:"hrmkt_funnel", name:"Воронка кандидатов и метрики", desc:"CAC кандидата, time to hire, cost per hire, анализ конверсии" },
+      { id:"hrmkt_channels", name:"Управление каналами привлечения", desc:"Performance + brand кампании, работа с подрядчиками (SMM, PR)" },
+      { id:"hrmkt_strategy", name:"Employer Branding стратегия", desc:"Глобальная стратегия бренда, репутация на рынке, амбассадоры бренда" },
+    ]
+  },
+  recruiter: {
+    title: "Recruiter",
+    desc: "Сорсинг, интервью и аналитика подбора",
+    skills: [
+      { id:"rec_sourcing", name:"Сорсинг", desc:"Boolean Search, X-Ray, продвинутый хантинг пассивных кандидатов" },
+      { id:"rec_interview", name:"Интервью по компетенциям", desc:"Методология STAR, обучение нанимающих менеджеров методам оценки" },
+      { id:"rec_ats", name:"Работа с ATS и воронкой", desc:"Ведение ATS-системы, анализ воронки подбора, выявление узких мест" },
+      { id:"rec_offers", name:"Офферы и переговоры", desc:"Формирование офферов, управление сложными переговорами и контр-офферами" },
+      { id:"rec_analytics", name:"Recruitment-аналитика", desc:"Стратегия найма, бюджет на подбор, Candidate Experience" },
+    ]
+  }
+};
+
+/* ====== STATE ====== */
+let selectedRole = null;
+let currentStep = 0;
+const ratings = { hard:{}, soft:{} };
+
+/* ====== DATE ====== */
+document.getElementById('dateField').value = new Date().toLocaleDateString('ru-RU');
+
+/* ====== ROLE PICKER ====== */
+document.querySelectorAll('.role-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedRole = chip.dataset.role;
+    renderHardSkills();
+    renderRadar();
+  });
+});
+
+/* ====== RENDER HARD SKILLS ====== */
+function renderHardSkills(){
+  const data = HARD_SKILLS[selectedRole];
+  if(!data) return;
+  document.getElementById('hardBlockTitle').textContent = data.title;
+  document.getElementById('hardBlockDesc').textContent = data.desc;
+  const container = document.getElementById('hardSkillsContainer');
+  container.innerHTML = '';
+  data.skills.forEach(skill => {
+    ratings.hard[skill.id] = ratings.hard[skill.id] ?? 5;
+    container.innerHTML += skillRowTemplate(skill, 'hard', 0, 10);
+  });
+  attachSliderListeners();
+}
+
+function skillRowTemplate(skill, type, min, max){
+  const current = ratings[type][skill.id];
+  return `
+    <div class="skill-row ${type}">
+      <div class="skill-row-head">
+        <span class="skill-name">${skill.name}</span>
+        <span class="skill-value" data-value-for="${skill.id}">${current}</span>
+      </div>
+      <p class="skill-desc">${skill.desc}</p>
+      <input type="range" min="${min}" max="${max}" value="${current}"
+             data-skill-id="${skill.id}" data-type="${type}">
+      <div class="scale-labels"><span>${min}</span><span>${max}</span></div>
+    </div>
+  `;
+}
+
+function attachSliderListeners(){
+  document.querySelectorAll('input[type=range]').forEach(slider => {
+    slider.addEventListener('input', (e) => {
+      const id = e.target.dataset.skillId;
+      const type = e.target.dataset.type;
+      const val = parseInt(e.target.value);
+      ratings[type][id] = val;
+      document.querySelector(`[data-value-for="${id}"]`).textContent = val;
+      renderRadar();
+    });
+  });
+}
+
+/* ====== STEP NAVIGATION ====== */
+function goToStep(step){
+  if(step === 1 && !selectedRole){
+    alert('Пожалуйста, выбери роль перед тем как продолжить.');
+    return;
+  }
+  document.querySelectorAll('.step-page').forEach(p => p.classList.add('hidden'));
+  document.querySelector(`[data-page="${step}"]`).classList.remove('hidden');
+  currentStep = step;
+
+  document.querySelectorAll('.step').forEach(s => {
+    const stepIdx = parseInt(s.dataset.step);
+    s.classList.remove('active','done');
+    if(stepIdx === step) s.classList.add('active');
+    else if(stepIdx < step) s.classList.add('done');
+  });
+
+  if(step === 1) renderHardSkills();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.querySelectorAll('.step').forEach(s => {
+  s.addEventListener('click', () => {
+    const target = parseInt(s.dataset.step);
+    if(target <= currentStep || (target===1 && selectedRole)) goToStep(target);
+  });
+});
+
+/* ====== RADAR CHART (live preview) ====== */
+function renderRadar(){
+  const svg = document.getElementById('radar');
+  const allSkills = [
+    ...(selectedRole ? HARD_SKILLS[selectedRole].skills.map(s => ({...s, type:'hard'})) : [])
+  ];
+  if(allSkills.length === 0){ svg.innerHTML = ''; return; }
+
+  const cx = 120, cy = 120, r = 90;
+  const n = allSkills.length;
+  const angleStep = (2 * Math.PI) / n;
+
+  let gridLines = '';
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    let points = [];
+    for(let i=0;i<n;i++){
+      const angle = -Math.PI/2 + i*angleStep;
+      const rad = r*frac;
+      points.push(`${cx+rad*Math.cos(angle)},${cy+rad*Math.sin(angle)}`);
+    }
+    gridLines += `<polygon points="${points.join(' ')}" fill="none" stroke="#2A2F38" stroke-width="1"/>`;
+  });
+
+  let axisLines = '';
+  let labels = '';
+  allSkills.forEach((s,i) => {
+    const angle = -Math.PI/2 + i*angleStep;
+    const x2 = cx + r*Math.cos(angle);
+    const y2 = cy + r*Math.sin(angle);
+    axisLines += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#2A2F38" stroke-width="1"/>`;
+    const lx = cx + (r+14)*Math.cos(angle);
+    const ly = cy + (r+14)*Math.sin(angle);
+    labels += `<circle cx="${lx}" cy="${ly}" r="2.5" fill="${s.type==='hard' ? '#E8A33D' : '#3DD9A8'}"/>`;
+  });
+
+  let dataPoints = [];
+  allSkills.forEach((s,i) => {
+    const angle = -Math.PI/2 + i*angleStep;
+    const val = ratings[s.type][s.id] ?? 0;
+    const rad = r * (val/10);
+    dataPoints.push(`${cx+rad*Math.cos(angle)},${cy+rad*Math.sin(angle)}`);
+  });
+  const dataPolygon = `<polygon points="${dataPoints.join(' ')}" fill="#4C7CF033" stroke="#4C7CF0" stroke-width="2"/>`;
+
+  svg.innerHTML = gridLines + axisLines + dataPolygon + labels;
+}
+
+renderRadar();
+
+/* ====== SUBMIT ====== */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+async function submitForm(){
+  const leadName = document.getElementById('leadName').value.trim();
+  const name = document.getElementById('name').value.trim();
+  if(!leadName){ alert('Укажи своё имя на первом шаге.'); goToStep(0); return; }
+  if(!name){ alert('Укажи имя сотрудника, которого оцениваешь.'); goToStep(0); return; }
+  if(!selectedRole){ alert('Выбери роль сотрудника на первом шаге.'); goToStep(0); return; }
+
+  const data = {
+    name: name,
+    rater: "lead",
+    rater_name: leadName,
+    role: selectedRole,
+    date: new Date().toISOString().slice(0,10),
+    hard_skills: ratings.hard
+  };
+
+  const submitBtn = document.querySelector('.btn-submit');
+  submitBtn.textContent = "Отправляем...";
+  submitBtn.disabled = true;
+
+  try{
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    document.querySelectorAll('.step-page').forEach(p => p.classList.add('hidden'));
+    document.querySelector('[data-page="done"]').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    downloadJSON(data);
+    alert('Не удалось отправить онлайн — файл сохранён на компьютер. Передай его HRBP вручную.');
+    submitBtn.textContent = "Отправить оценку";
+    submitBtn.disabled = false;
+  }
+}
+
+function downloadJSON(data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safeName = data.name.replace(/\s+/g,'_');
+  a.download = `lead_${safeName}_${data.date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>
