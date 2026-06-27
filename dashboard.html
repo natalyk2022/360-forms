@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дашборд 360° — HRBP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --hard:#E8A33D;
+    --hard-soft:#E8A33D1A;
+    --soft:#3DD9A8;
+    --soft-soft:#3DD9A81A;
+    --lead:#9B7BF0;
+    --lead-soft:#9B7BF01A;
+    --danger:#E0556B;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:40px 32px 100px;}
+
+  /* ===== HEADER / SEARCH ===== */
+  .top{margin-bottom:32px;}
+  .brand{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:20px;
+  }
+  .brand span{color:var(--accent);}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:8px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; margin-bottom:28px;}
+
+  .search-box{
+    position:relative;
+    margin-bottom:8px;
+  }
+  .search-input{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    padding:16px 20px;
+    border-radius:12px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .search-input:focus{border-color:var(--accent);}
+  .search-results{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0; right:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    z-index:10;
+    max-height:280px;
+    overflow-y:auto;
+  }
+  .search-result-item{
+    padding:14px 20px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .search-result-item:last-child{border-bottom:none;}
+  .search-result-item:hover{background:var(--panel-2);}
+  .sri-name{font-weight:600; font-size:14px;}
+  .sri-meta{font-size:12px; color:var(--text-faint);}
+  .sri-badges{display:flex; gap:6px;}
+  .badge{
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border-radius:5px;
+  }
+  .badge.self{background:var(--accent-soft); color:var(--accent);}
+  .badge.lead{background:var(--lead-soft); color:var(--lead);}
+  .badge.peer{background:var(--soft-soft); color:var(--soft);}
+  .badge.missing{background:#2A2F38; color:var(--text-faint);}
+
+  .loading-state, .empty-state{
+    text-align:center;
+    padding:80px 20px;
+    color:var(--text-dim);
+  }
+  .empty-state svg{margin-bottom:16px; opacity:.5;}
+
+  /* ===== PROFILE CARD ===== */
+  .hidden{display:none !important;}
+  .profile-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:28px;
+    padding-bottom:24px;
+    border-bottom:1px solid var(--line);
+  }
+  .profile-name{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .profile-role{color:var(--text-dim); font-size:14px;}
+  .profile-sources{display:flex; gap:8px;}
+  .back-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:13px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px;}
+  @media (max-width:760px){ .grid-2{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px;
+  }
+  .panel-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .panel-sub{font-size:12px; color:var(--text-faint); margin-bottom:18px;}
+
+  .legend{display:flex; gap:16px; margin-top:14px; font-size:12px; color:var(--text-dim); flex-wrap:wrap;}
+  .legend-item{display:flex; align-items:center; gap:6px;}
+  .legend-dot{width:8px; height:8px; border-radius:50%;}
+
+  /* ===== COMPARE BARS ===== */
+  .compare-row{margin-bottom:18px;}
+  .compare-row:last-child{margin-bottom:0;}
+  .compare-label{
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .compare-bars{display:flex; flex-direction:column; gap:5px;}
+  .bar-track{
+    background:var(--panel-2);
+    border-radius:6px;
+    height:8px;
+    position:relative;
+    overflow:hidden;
+  }
+  .bar-fill{height:100%; border-radius:6px; transition:width .3s;}
+  .bar-fill.self{background:var(--accent);}
+  .bar-fill.lead{background:var(--lead);}
+  .bar-fill.peer{background:var(--soft);}
+  .bar-row{display:flex; align-items:center; gap:8px;}
+  .bar-tag{font-size:10px; color:var(--text-faint); width:38px; flex-shrink:0;}
+  .bar-val{font-size:11px; color:var(--text-dim); width:24px; text-align:right; flex-shrink:0;}
+
+  /* ===== TEXT BLOCKS ===== */
+  .text-block{margin-bottom:16px;}
+  .text-block:last-child{margin-bottom:0;}
+  .text-block-label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .text-block-content{
+    font-size:14px;
+    color:var(--text);
+    line-height:1.6;
+    background:var(--panel-2);
+    border-radius:10px;
+    padding:14px 16px;
+    white-space:pre-wrap;
+  }
+  .text-block-empty{color:var(--text-faint); font-style:italic;}
+  .peer-count{font-size:11px; color:var(--text-faint); margin-top:4px;}
+
+  /* ===== PLAN ===== */
+  textarea.plan-input{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:16px;
+    border-radius:10px;
+    outline:none;
+    resize:vertical;
+    min-height:140px;
+    line-height:1.6;
+    transition:border-color .15s;
+  }
+  textarea.plan-input:focus{border-color:var(--accent);}
+  .plan-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+  }
+  .plan-status{font-size:12px; color:var(--text-faint);}
+  .plan-status.saved{color:var(--soft);}
+  button.save-btn{
+    background:var(--accent);
+    color:#fff;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:11px 22px;
+    border:none;
+    border-radius:9px;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  button.save-btn:hover{opacity:.9;}
+  button.save-btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  svg.radar-svg{width:100%; height:auto;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">360° <span>дашборд HRBP</span></div>
+    <h1>Найди сотрудника</h1>
+    <p class="subtitle">Поиск объединяет самооценку, оценку лида и анонимные оценки коллег по имени.</p>
+
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" placeholder="Начни вводить имя сотрудника...">
+      <div class="search-results hidden" id="searchResults"></div>
+    </div>
+  </div>
+
+  <div class="loading-state" id="loadingState">Загружаем данные из таблицы...</div>
+
+  <div class="empty-state hidden" id="emptyState">
+    <div>Введи имя сотрудника, чтобы открыть карточку</div>
+  </div>
+
+  <div class="hidden" id="profileView">
+
+    <div class="profile-header">
+      <div>
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-role" id="profileRole">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="profile-sources" id="profileSources" style="margin-bottom:10px;"></div>
+        <button class="back-btn" onclick="resetView()">← К поиску</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Радар компетенций</div>
+        <div class="panel-sub">Само vs лид (hard) · Само vs коллеги (soft)</div>
+        <svg id="radarSvg" class="radar-svg" viewBox="0 0 260 260"></svg>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Само</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--lead)"></span>Лид</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--soft)"></span>Коллеги (среднее)</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Hard skills</div>
+        <div class="panel-sub">Само vs лид, шкала 0–10</div>
+        <div id="hardCompare"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Soft skills</div>
+        <div class="panel-sub">Само vs коллеги, шкала 1–10</div>
+        <div id="softCompare"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Комментарии</div>
+        <div class="panel-sub">От сотрудника и анонимно от коллег</div>
+
+        <div class="text-block">
+          <div class="text-block-label">Цели развития (от сотрудника)</div>
+          <div class="text-block-content" id="goalsText"></div>
+        </div>
+        <div class="text-block">
+          <div class="text-block-label">Достижения (от коллег)</div>
+          <div class="text-block-content" id="achievementsText"></div>
+          <div class="peer-count" id="peerCount"></div>
+        </div>
+        <div class="text-block">
+          <div class="text-block-label">Зоны роста (от коллег)</div>
+          <div class="text-block-content" id="growthZonesText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px;">
+      <div class="panel-title">План развития HRBP</div>
+      <div class="panel-sub">Сохраняется в Google Таблицу — не теряется при закрытии страницы</div>
+      <textarea class="plan-input" id="planInput" placeholder="Например: развить навык X через менторство, добавить сложную задачу Y в следующий квартал..."></textarea>
+      <div class="plan-footer">
+        <span class="plan-status" id="planStatus"></span>
+        <button class="save-btn" id="savePlanBtn" onclick="savePlan()">Сохранить план</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ====== CONFIG ====== */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+/* ====== COMPETENCY DEFINITIONS (для подписей навыков) ====== */
+const HARD_SKILLS = {
+  pm: { title:"Product Manager", skills:[
+    { id:"pm_analytics", name:"Продуктовая аналитика" },
+    { id:"pm_web3", name:"Web3 / блокчейн экспертиза" },
+    { id:"pm_roadmap", name:"Roadmap & стратегия" },
+    { id:"pm_unit_econ", name:"Unit-экономика" },
+    { id:"pm_custdev", name:"CustDev и требования" },
+  ]},
+  ba: { title:"Business Analyst", skills:[
+    { id:"ba_requirements", name:"Сбор требований" },
+    { id:"ba_api", name:"Работа с API и интеграциями" },
+    { id:"ba_blockchain", name:"Блокчейн-транзакции" },
+    { id:"ba_architecture", name:"Архитектура данных" },
+    { id:"ba_reporting", name:"Аналитика и дашборды" },
+  ]},
+  uxui: { title:"UX/UI Designer", skills:[
+    { id:"ux_figma", name:"Figma и прототипирование" },
+    { id:"ux_fintech_ui", name:"Fintech/Web3 UI" },
+    { id:"ux_design_system", name:"Дизайн-системы" },
+    { id:"ux_data_viz", name:"Data visualization" },
+    { id:"ux_research", name:"Дизайн-ревью и метрики" },
+  ]},
+  hrops: { title:"HR Operations", skills:[
+    { id:"hrops_kdp", name:"Кадровое делопроизводство и ТК" },
+    { id:"hrops_benefits", name:"Администрирование льгот и ДМС" },
+    { id:"hrops_systems", name:"HR-системы и автоматизация" },
+    { id:"hrops_cb", name:"C&B и грейдирование" },
+    { id:"hrops_bi", name:"BI-дашборды и отчётность" },
+  ]},
+  hrgen: { title:"HR Generalist", skills:[
+    { id:"hrgen_onboarding", name:"Онбординг и адаптация" },
+    { id:"hrgen_pr", name:"Performance Review" },
+    { id:"hrgen_talent", name:"Talent Management" },
+    { id:"hrgen_conflict", name:"Разрешение конфликтов" },
+    { id:"hrgen_retention", name:"Retention-аналитика" },
+  ]},
+  hrmkt: { title:"HR Marketolog", skills:[
+    { id:"hrmkt_evp", name:"EVP и HR-бренд" },
+    { id:"hrmkt_content", name:"Контент и соцсети работодателя" },
+    { id:"hrmkt_funnel", name:"Воронка кандидатов и метрики" },
+    { id:"hrmkt_channels", name:"Управление каналами привлечения" },
+    { id:"hrmkt_strategy", name:"Employer Branding стратегия" },
+  ]},
+  recruiter: { title:"Recruiter", skills:[
+    { id:"rec_sourcing", name:"Сорсинг" },
+    { id:"rec_interview", name:"Интервью по компетенциям" },
+    { id:"rec_ats", name:"Работа с ATS и воронкой" },
+    { id:"rec_offers", name:"Офферы и переговоры" },
+    { id:"rec_analytics", name:"Recruitment-аналитика" },
+  ]},
+};
+
+const SOFT_SKILLS = [
+  { id:"soft_communication", name:"Коммуникация" },
+  { id:"soft_proactivity", name:"Проактивность" },
+  { id:"soft_teamwork", name:"Командная работа" },
+  { id:"soft_ownership", name:"Ownership" },
+  { id:"soft_learning", name:"Обучаемость" },
+];
+
+const ROLE_LABELS = {
+  pm:"Product Manager", ba:"Business Analyst", uxui:"UX/UI Designer",
+  hrops:"HR Operations", hrgen:"HR Generalist", hrmkt:"HR Marketolog", recruiter:"Recruiter"
+};
+
+/* ====== STATE ====== */
+let database = {}; // { "Имя": { self:{...}, lead:{...}, peers:[...] } }
+let plans = {};    // { "Имя": "текст плана" }
+let currentName = null;
+
+/* ====== LOAD DATA ====== */
+async function loadData(){
+  try{
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    buildDatabase(data);
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('emptyState').classList.remove('hidden');
+  }catch(err){
+    document.getElementById('loadingState').textContent =
+      'Не удалось загрузить данные. Проверь, что Web App URL указан верно и таблица доступна.';
+  }
+}
+
+function safeParse(str){
+  try{ return JSON.parse(str); }catch(e){ return {}; }
+}
+
+function buildDatabase(raw){
+  database = {};
+  plans = {};
+
+  ['self','lead','peer'].forEach(kind => {
+    const rows = raw[kind] || [];
+    for(let i = 1; i < rows.length; i++){ // строка 0 — заголовки
+      const [date, name, rater, role, hardJson, softJson, extraJson] = rows[i];
+      if(!name) continue;
+      if(!database[name]) database[name] = { peers: [] };
+
+      const entry = {
+        date, role,
+        hard: safeParse(hardJson),
+        soft: safeParse(softJson),
+        extra: safeParse(extraJson)
+      };
+
+      if(kind === 'peer') database[name].peers.push(entry);
+      else database[name][kind] = entry;
+    }
+  });
+
+  const planRows = raw.plans || [];
+  for(let i = 1; i < planRows.length; i++){
+    const [date, name, planText] = planRows[i];
+    if(name) plans[name] = planText || "";
+  }
+}
+
+/* ====== SEARCH ====== */
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){ searchResults.classList.add('hidden'); return; }
+
+  const matches = Object.keys(database).filter(name => name.toLowerCase().includes(q));
+  if(matches.length === 0){
+    searchResults.innerHTML = '<div class="search-result-item"><span class="sri-meta">Никого не найдено</span></div>';
+    searchResults.classList.remove('hidden');
+    return;
+  }
+
+  searchResults.innerHTML = matches.map(name => {
+    const p = database[name];
+    const role = p.self?.role || p.lead?.role || '';
+    const roleLabel = ROLE_LABELS[role] || role || '—';
+    return `
+      <div class="search-result-item" onclick="openProfile('${name.replace(/'/g,"\\'")}')">
+        <div>
+          <div class="sri-name">${name}</div>
+          <div class="sri-meta">${roleLabel}</div>
+        </div>
+        <div class="sri-badges">
+          <span class="badge ${p.self ? 'self' : 'missing'}">Self</span>
+          <span class="badge ${p.lead ? 'lead' : 'missing'}">Lead</span>
+          <span class="badge ${p.peers.length ? 'peer' : 'missing'}">Peer ${p.peers.length ? '×'+p.peers.length : ''}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  searchResults.classList.remove('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.search-box')) searchResults.classList.add('hidden');
+});
+
+/* ====== OPEN PROFILE ====== */
+function openProfile(name){
+  currentName = name;
+  searchInput.value = name;
+  searchResults.classList.add('hidden');
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('profileView').classList.remove('hidden');
+
+  const p = database[name];
+  const role = p.self?.role || p.lead?.role || '';
+  const roleLabel = ROLE_LABELS[role] || role || 'Роль не указана';
+
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileRole').textContent = roleLabel;
+
+  const sourcesEl = document.getElementById('profileSources');
+  sourcesEl.innerHTML = `
+    <span class="badge ${p.self ? 'self' : 'missing'}">Self ${p.self ? '✓' : '—'}</span>
+    <span class="badge ${p.lead ? 'lead' : 'missing'}">Lead ${p.lead ? '✓' : '—'}</span>
+    <span class="badge ${p.peers.length ? 'peer' : 'missing'}">Peer ${p.peers.length ? '×'+p.peers.length : '—'}</span>
+  `;
+
+  renderHardCompare(p, role);
+  renderSoftCompare(p);
+  renderRadar(p, role);
+  renderComments(p);
+  renderPlan(name);
+}
+
+function resetView(){
+  currentName = null;
+  searchInput.value = '';
+  document.getElementById('profileView').classList.add('hidden');
+  document.getElementById('emptyState').classList.remove('hidden');
+}
+
+/* ====== HARD SKILLS COMPARE (self vs lead) ====== */
+function renderHardCompare(p, role){
+  const container = document.getElementById('hardCompare');
+  const roleData = HARD_SKILLS[role];
+  if(!roleData){
+    container.innerHTML = '<p class="text-block-empty">Роль не определена — нет данных о хард-скиллах.</p>';
+    return;
+  }
+
+  container.innerHTML = roleData.skills.map(skill => {
+    const selfVal = p.self?.hard?.[skill.id];
+    const leadVal = p.lead?.hard?.[skill.id];
+    return `
+      <div class="compare-row">
+        <div class="compare-label"><span>${skill.name}</span></div>
+        <div class="compare-bars">
+          ${barRow('само', selfVal, 'self', 10)}
+          ${barRow('лид', leadVal, 'lead', 10)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ====== SOFT SKILLS COMPARE (self vs peer average) ====== */
+function renderSoftCompare(p){
+  const container = document.getElementById('softCompare');
+  const peerAvg = averagePeerSoft(p.peers);
+
+  container.innerHTML = SOFT_SKILLS.map(skill => {
+    const selfVal = p.self?.soft?.[skill.id];
+    const peerVal = peerAvg[skill.id];
+    return `
+      <div class="compare-row">
+        <div class="compare-label"><span>${skill.name}</span></div>
+        <div class="compare-bars">
+          ${barRow('само', selfVal, 'self', 10)}
+          ${barRow('колл.', peerVal, 'peer', 10)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function barRow(tag, val, type, max){
+  const display = (val === undefined || val === null || isNaN(val)) ? '—' : val;
+  const widthPct = (val === undefined || val === null || isNaN(val)) ? 0 : (val/max*100);
+  return `
+    <div class="bar-row">
+      <span class="bar-tag">${tag}</span>
+      <div class="bar-track" style="flex:1;"><div class="bar-fill ${type}" style="width:${widthPct}%"></div></div>
+      <span class="bar-val">${display}</span>
+    </div>
+  `;
+}
+
+function averagePeerSoft(peers){
+  const sums = {}, counts = {};
+  peers.forEach(peer => {
+    Object.entries(peer.soft || {}).forEach(([id, val]) => {
+      sums[id] = (sums[id] || 0) + Number(val);
+      counts[id] = (counts[id] || 0) + 1;
+    });
+  });
+  const avg = {};
+  Object.keys(sums).forEach(id => { avg[id] = Math.round((sums[id]/counts[id]) * 10) / 10; });
+  return avg;
+}
+
+/* ====== RADAR ====== */
+function renderRadar(p, role){
+  const svg = document.getElementById('radarSvg');
+  const roleData = HARD_SKILLS[role];
+  const hardSkills = roleData ? roleData.skills : [];
+  const peerAvg = averagePeerSoft(p.peers);
+
+  const allAxes = [
+    ...hardSkills.map(s => ({...s, type:'hard'})),
+    ...SOFT_SKILLS.map(s => ({...s, type:'soft'}))
+  ];
+
+  if(allAxes.length === 0){ svg.innerHTML = ''; return; }
+
+  const cx = 130, cy = 130, r = 95;
+  const n = allAxes.length;
+  const angleStep = (2*Math.PI) / n;
+
+  let gridLines = '';
+  [0.25,0.5,0.75,1].forEach(frac => {
+    let pts = [];
+    for(let i=0;i<n;i++){
+      const angle = -Math.PI/2 + i*angleStep;
+      pts.push(`${cx+r*frac*Math.cos(angle)},${cy+r*frac*Math.sin(angle)}`);
+    }
+    gridLines += `<polygon points="${pts.join(' ')}" fill="none" stroke="#2A2F38" stroke-width="1"/>`;
+  });
+
+  let axisLines = '', labels = '';
+  allAxes.forEach((s,i) => {
+    const angle = -Math.PI/2 + i*angleStep;
+    const x2 = cx + r*Math.cos(angle), y2 = cy + r*Math.sin(angle);
+    axisLines += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#2A2F38" stroke-width="1"/>`;
+    const lx = cx + (r+16)*Math.cos(angle), ly = cy + (r+16)*Math.sin(angle);
+    const dotColor = s.type === 'hard' ? '#E8A33D' : '#3DD9A8';
+    labels += `<circle cx="${lx}" cy="${ly}" r="2.5" fill="${dotColor}"/>`;
+  });
+
+  function seriesPolygon(getVal, color){
+    let pts = [];
+    allAxes.forEach((s,i) => {
+      const angle = -Math.PI/2 + i*angleStep;
+      const val = getVal(s) || 0;
+      const rad = r * (val/10);
+      pts.push(`${cx+rad*Math.cos(angle)},${cy+rad*Math.sin(angle)}`);
+    });
+    return `<polygon points="${pts.join(' ')}" fill="${color}22" stroke="${color}" stroke-width="2"/>`;
+  }
+
+  const selfPoly = seriesPolygon(s => s.type==='hard' ? p.self?.hard?.[s.id] : p.self?.soft?.[s.id], '#4C7CF0');
+  const leadPoly = seriesPolygon(s => s.type==='hard' ? p.lead?.hard?.[s.id] : null, '#9B7BF0');
+  const peerPoly = seriesPolygon(s => s.type==='soft' ? peerAvg[s.id] : null, '#3DD9A8');
+
+  svg.innerHTML = gridLines + axisLines + peerPoly + leadPoly + selfPoly + labels;
+}
+
+/* ====== COMMENTS ====== */
+function renderComments(p){
+  const goals = p.self?.extra?.goals || p.self?.extra?.value_question || '';
+  document.getElementById('goalsText').innerHTML = goals
+    ? escapeHtml(goals)
+    : '<span class="text-block-empty">Сотрудник пока не заполнил самооценку</span>';
+
+  const achievements = p.peers.map(pe => pe.extra?.achievements).filter(Boolean);
+  const growthZones = p.peers.map(pe => pe.extra?.growth_zones).filter(Boolean);
+
+  document.getElementById('achievementsText').innerHTML = achievements.length
+    ? achievements.map(a => `• ${escapeHtml(a)}`).join('<br><br>')
+    : '<span class="text-block-empty">Пока нет ответов от коллег</span>';
+
+  document.getElementById('peerCount').textContent =
+    p.peers.length ? `Собрано ${p.peers.length} анонимных оценок коллег` : '';
+
+  document.getElementById('growthZonesText').innerHTML = growthZones.length
+    ? growthZones.map(g => `• ${escapeHtml(g)}`).join('<br><br>')
+    : '<span class="text-block-empty">Пока нет ответов от коллег</span>';
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ====== PLAN ====== */
+function renderPlan(name){
+  document.getElementById('planInput').value = plans[name] || '';
+  document.getElementById('planStatus').textContent = '';
+  document.getElementById('planStatus').classList.remove('saved');
+}
+
+async function savePlan(){
+  if(!currentName) return;
+  const text = document.getElementById('planInput').value;
+  const btn = document.getElementById('savePlanBtn');
+  const status = document.getElementById('planStatus');
+
+  btn.disabled = true;
+  btn.textContent = 'Сохраняем...';
+
+  try{
+    await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'save_plan', name: currentName, plan_text: text })
+    });
+    plans[currentName] = text;
+    status.textContent = 'Сохранено';
+    status.classList.add('saved');
+  }catch(err){
+    status.textContent = 'Не удалось сохранить — проверь соединение';
+    status.classList.remove('saved');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Сохранить план';
+  }
+}
+
+/* ====== INIT ====== */
+loadData();
+</script>
+
+</body>
+</html>
