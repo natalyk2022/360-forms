@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Онбординг — день 85 (сотрудник)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --coral:#E2876A;
+    --coral-soft:#E2876A1A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:600px; margin:0 auto; padding:56px 32px 100px;}
+
+  .eyebrow{
+    font-size:12px;
+    font-weight:600;
+    color:var(--coral);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:12px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; margin-bottom:36px;}
+
+  .field-group{margin-bottom:24px;}
+  label.meta-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .autocomplete-box{position:relative;}
+  input[type=text]{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  .autocomplete-results{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0; right:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    z-index:20;
+    max-height:240px;
+    overflow-y:auto;
+  }
+  .autocomplete-item{
+    padding:12px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .autocomplete-item:last-child{border-bottom:none;}
+  .autocomplete-item:hover{background:var(--panel-2);}
+  .autocomplete-empty{
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--text-faint);
+    font-style:italic;
+  }
+
+  .question-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:14px;
+  }
+  .q-label{
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:16px;
+    line-height:1.4;
+  }
+
+  .scale-1-10{
+    display:grid;
+    grid-template-columns:repeat(10, 1fr);
+    gap:6px;
+    margin-bottom:8px;
+  }
+  .scale-btn{
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:all .12s;
+  }
+  .scale-btn:hover{border-color:var(--coral);}
+  .scale-btn.selected{
+    background:var(--coral);
+    border-color:var(--coral);
+    color:#1A1208;
+  }
+  .scale-edges{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text-faint);
+  }
+
+  textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:14px 16px;
+    border-radius:10px;
+    outline:none;
+    resize:vertical;
+    min-height:90px;
+    transition:border-color .15s;
+  }
+  textarea:focus{border-color:var(--accent);}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+    background:linear-gradient(135deg, var(--coral), #C25C3D);
+    color:#1A1208;
+    margin-top:8px;
+  }
+  button:disabled{opacity:.6; cursor:not-allowed;}
+
+  .hidden{display:none !important;}
+  .done-screen{text-align:center; padding:100px 20px;}
+  .done-icon{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--coral-soft);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="formArea">
+    <div class="eyebrow">Онбординг · день 85 · сотрудник</div>
+    <h1>Подводим итоги испытательного срока</h1>
+    <p class="subtitle">Это твой финальный опрос перед окончанием испытательного срока. Ответы видит только HRBP. Будь честен — это поможет принять решение, которое подходит всем.</p>
+
+    <div class="field-group">
+      <label class="meta-label">Имя и фамилия</label>
+      <div class="autocomplete-box">
+        <input type="text" id="name" placeholder="Начни вводить имя..." autocomplete="off" required>
+        <div class="autocomplete-results hidden" id="nameResults"></div>
+      </div>
+    </div>
+
+    <div id="questionsContainer"></div>
+
+    <div class="field-group">
+      <label class="meta-label">Что было самым важным за эти 85 дней — хорошим или сложным? (необязательно)</label>
+      <textarea id="comment" placeholder="Можно оставить пустым"></textarea>
+    </div>
+
+    <button type="button" id="submitBtn" onclick="submitForm()">Отправить</button>
+  </div>
+
+  <div class="done-screen hidden" id="doneScreen">
+    <div class="done-icon">✓</div>
+    <h1>Спасибо!</h1>
+    <p class="subtitle" style="margin:0 auto;">Ответ сохранён. Спасибо за честность — это помогает компании быть лучше для новых сотрудников.</p>
+  </div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+const QUESTIONS = [
+  { id: "role_fit", text: "Эта роль соответствует тому, что я ожидал на старте" },
+  { id: "support_received", text: "Я получил достаточную поддержку от лида и команды за это время" },
+  { id: "team_fit", text: "Я чувствую себя частью команды" },
+  { id: "growth_seen", text: "Я вижу свой рост и прогресс за эти 85 дней" },
+  { id: "want_to_stay", text: "Я хочу продолжить работать здесь после испытательного срока" },
+];
+
+const answers = {};
+
+function renderQuestions(){
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = QUESTIONS.map(q => `
+    <div class="question-card">
+      <div class="q-label">${q.text}</div>
+      <div class="scale-1-10" id="scale-${q.id}"></div>
+      <div class="scale-edges"><span>1 — не согласен</span><span>10 — полностью согласен</span></div>
+    </div>
+  `).join('');
+
+  QUESTIONS.forEach(q => {
+    const container = document.getElementById(`scale-${q.id}`);
+    for(let i = 1; i <= 10; i++){
+      const btn = document.createElement('div');
+      btn.className = 'scale-btn';
+      btn.textContent = i;
+      btn.addEventListener('click', () => {
+        answers[q.id] = i;
+        container.querySelectorAll('.scale-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i));
+      });
+      container.appendChild(btn);
+    }
+  });
+}
+renderQuestions();
+
+let employeesList = [];
+
+async function loadEmployees(){
+  try{
+    const res = await fetch(WEB_APP_URL + "?type=employees");
+    const data = await res.json();
+    employeesList = data.employees || [];
+  }catch(err){
+    employeesList = [];
+  }
+}
+
+const nameInput = document.getElementById('name');
+const nameResults = document.getElementById('nameResults');
+
+nameInput.addEventListener('input', () => {
+  const q = nameInput.value.trim().toLowerCase();
+  if(!q || employeesList.length === 0){ nameResults.classList.add('hidden'); return; }
+
+  const matches = employeesList.filter(e => e.name.toLowerCase().includes(q));
+  if(matches.length === 0){
+    nameResults.innerHTML = '<div class="autocomplete-empty">Не найдено в списке — можно ввести вручную</div>';
+    nameResults.classList.remove('hidden');
+    return;
+  }
+
+  nameResults.innerHTML = matches.map(e => `
+    <div class="autocomplete-item" data-name="${e.name.replace(/"/g,'&quot;')}">${e.name}</div>
+  `).join('');
+  nameResults.classList.remove('hidden');
+});
+
+nameResults.addEventListener('click', (e) => {
+  const item = e.target.closest('.autocomplete-item');
+  if(!item || !item.dataset.name) return;
+  nameInput.value = item.dataset.name;
+  nameResults.classList.add('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.autocomplete-box')) nameResults.classList.add('hidden');
+});
+
+loadEmployees();
+
+async function submitForm(){
+  const name = nameInput.value.trim();
+  if(!name){ alert('Укажи имя.'); return; }
+
+  const incomplete = QUESTIONS.some(q => answers[q.id] === undefined);
+  if(incomplete){ alert('Ответь на все вопросы.'); return; }
+
+  const data = {
+    name: name,
+    rater: "onboarding_d85_self",
+    date: new Date().toISOString().slice(0,10),
+    answers: answers,
+    comment: document.getElementById('comment').value.trim()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = "Отправляем...";
+  btn.disabled = true;
+
+  try{
+    await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(data) });
+    document.getElementById('formArea').classList.add('hidden');
+    document.getElementById('doneScreen').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    downloadJSON(data);
+    alert('Не удалось отправить онлайн — файл сохранён на компьютер. Передай его HRBP вручную.');
+    btn.textContent = "Отправить";
+    btn.disabled = false;
+  }
+}
+
+function downloadJSON(data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safeName = data.name.replace(/\s+/g,'_');
+  a.download = `onboarding_d85_self_${safeName}_${data.date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>
