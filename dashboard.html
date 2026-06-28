@@ -296,6 +296,21 @@
   button.save-btn:hover{opacity:.9;}
   button.save-btn:disabled{opacity:.5; cursor:not-allowed;}
 
+  button.send-plan-btn{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:11px 22px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  button.send-plan-btn:hover{color:var(--text); border-color:var(--text-faint);}
+  button.send-plan-btn:disabled{opacity:.4; cursor:not-allowed;}
+
   svg.radar-svg{width:100%; height:auto;}
 
   /* ===== INSIGHTS (расхождения self/lead/peer) ===== */
@@ -451,7 +466,10 @@
       <textarea class="plan-input" id="planInput" placeholder="Например: развить навык X через менторство, добавить сложную задачу Y в следующий квартал..."></textarea>
       <div class="plan-footer">
         <span class="plan-status" id="planStatus"></span>
-        <button class="save-btn" id="savePlanBtn" onclick="savePlan()">Сохранить план</button>
+        <div style="display:flex; gap:10px;">
+          <button class="send-plan-btn" id="sendPlanBtn" onclick="sendPlanToEmployee()">Отправить сотруднику</button>
+          <button class="save-btn" id="savePlanBtn" onclick="savePlan()">Сохранить план</button>
+        </div>
       </div>
     </div>
 
@@ -1071,6 +1089,48 @@ async function savePlan(){
   }finally{
     btn.disabled = false;
     btn.textContent = 'Сохранить план';
+  }
+}
+
+async function sendPlanToEmployee(){
+  if(!currentName) return;
+  const text = document.getElementById('planInput').value.trim();
+  const status = document.getElementById('planStatus');
+
+  if(!text){
+    alert('План пустой — сначала напиши текст плана.');
+    return;
+  }
+
+  const confirmed = confirm(
+    `Отправить этот план развития сотруднику ${currentName} личным сообщением в Slack?\n\nЭто действие нельзя отменить — сообщение придёт сразу.`
+  );
+  if(!confirmed) return;
+
+  const btn = document.getElementById('sendPlanBtn');
+  btn.disabled = true;
+  btn.textContent = 'Отправляем...';
+
+  try{
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'send_plan_to_slack', name: currentName, plan_text: text })
+    });
+    const data = await res.json();
+
+    if(data.status === 'ok'){
+      status.textContent = 'Отправлено сотруднику';
+      status.classList.add('saved');
+    } else {
+      status.textContent = data.message || 'Не удалось отправить';
+      status.classList.remove('saved');
+    }
+  }catch(err){
+    status.textContent = 'Не удалось отправить — проверь соединение';
+    status.classList.remove('saved');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Отправить сотруднику';
   }
 }
 
