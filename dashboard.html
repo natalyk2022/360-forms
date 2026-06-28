@@ -210,6 +210,29 @@
   }
   .factor-label span:last-child{color:var(--text-dim); font-weight:400;}
 
+  .enps-metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width:600px){ .enps-metrics{grid-template-columns:1fr;} }
+  .enps-metric{
+    background:var(--panel-2);
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .enps-metric-label{font-size:11px; color:var(--text-faint); margin-bottom:6px;}
+  .enps-metric-value{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:24px;
+    font-weight:700;
+  }
+  .enps-metric-value.promoter{color:var(--soft);}
+  .enps-metric-value.passive{color:var(--hard);}
+  .enps-metric-value.detractor{color:var(--danger);}
+
   /* ===== TEXT BLOCKS ===== */
   .text-block{margin-bottom:16px;}
   .text-block:last-child{margin-bottom:0;}
@@ -417,6 +440,12 @@
     </div>
 
     <div class="panel" style="margin-bottom:24px;">
+      <div class="panel-title">eNPS и риск ухода</div>
+      <div class="panel-sub">Личные ответы сотрудника, последний цикл</div>
+      <div id="enpsContainer"></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px;">
       <div class="panel-title">План развития HRBP</div>
       <div class="panel-sub">Сохраняется в Google Таблицу — не теряется при закрытии страницы</div>
       <textarea class="plan-input" id="planInput" placeholder="Например: развить навык X через менторство, добавить сложную задачу Y в следующий квартал..."></textarea>
@@ -564,6 +593,15 @@ function buildDatabase(raw){
     database[name].disc = { date, scores: safeParse(scoresJson) };
   }
 
+  // Enps: ["Дата","Имя","eNPS оценка","Причина","Горизонт","Готовность смотреть оффер"]
+  const enpsRows = raw.enps || [];
+  for(let i = 1; i < enpsRows.length; i++){
+    const [date, name, enpsScore, enpsReason, horizon, offerScore] = enpsRows[i];
+    if(!name) continue;
+    if(!database[name]) database[name] = { peers: [] };
+    database[name].enps = { date, enpsScore, enpsReason, horizon, offerScore };
+  }
+
   const planRows = raw.plans || [];
   for(let i = 1; i < planRows.length; i++){
     const [date, name, planText] = planRows[i];
@@ -640,6 +678,7 @@ function openProfile(name){
   renderComments(p);
   renderMotivation(p);
   renderDisc(p);
+  renderEnps(p);
   renderPlan(name);
 }
 
@@ -949,6 +988,57 @@ function renderDisc(p){
       </div>
     `;
   }).join('');
+}
+
+/* ====== ENPS ====== */
+const HORIZON_LABELS = {
+  yes: "Да",
+  probably_yes: "Скорее да",
+  not_sure: "Не уверен",
+  probably_no: "Скорее нет",
+  no: "Нет",
+};
+
+function renderEnps(p){
+  const container = document.getElementById('enpsContainer');
+  if(!p.enps){
+    container.innerHTML = '<p class="text-block-empty">Сотрудник пока не заполнил опрос eNPS</p>';
+    return;
+  }
+
+  const score = Number(p.enps.enpsScore);
+  let scoreClass = 'passive';
+  if(score >= 9) scoreClass = 'promoter';
+  else if(score <= 6) scoreClass = 'detractor';
+
+  const horizonLabel = HORIZON_LABELS[p.enps.horizon] || p.enps.horizon || '—';
+  const horizonClass = (p.enps.horizon === 'no' || p.enps.horizon === 'probably_no') ? 'detractor' : '';
+
+  container.innerHTML = `
+    <div class="enps-metrics">
+      <div class="enps-metric">
+        <div class="enps-metric-label">Порекомендует компанию (0–10)</div>
+        <div class="enps-metric-value ${scoreClass}">${isNaN(score) ? '—' : score}</div>
+      </div>
+      <div class="enps-metric">
+        <div class="enps-metric-label">Планирует работать через год</div>
+        <div class="enps-metric-value ${horizonClass}">${horizonLabel}</div>
+      </div>
+      <div class="enps-metric">
+        <div class="enps-metric-label">Рассмотрит оффер (0–10)</div>
+        <div class="enps-metric-value ${Number(p.enps.offerScore) >= 7 ? 'detractor' : ''}">${p.enps.offerScore ?? '—'}</div>
+      </div>
+    </div>
+  `;
+
+  if(p.enps.enpsReason){
+    container.innerHTML += `
+      <div class="text-block">
+        <div class="text-block-label">Что повлияло на оценку</div>
+        <div class="text-block-content">${escapeHtml(p.enps.enpsReason)}</div>
+      </div>
+    `;
+  }
 }
 
 /* ====== PLAN ====== */
