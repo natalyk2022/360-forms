@@ -595,6 +595,7 @@ function buildDatabase(raw){
 
   // Enps: ["Дата","Имя","eNPS оценка","Причина","Горизонт","Готовность смотреть оффер"]
   const enpsRows = raw.enps || [];
+  window.__rawEnpsRows__ = enpsRows; // ВРЕМЕННАЯ ДИАГНОСТИКА
   for(let i = 1; i < enpsRows.length; i++){
     const [date, name, enpsScore, enpsReason, horizon, offerScore] = enpsRows[i];
     if(!name) continue;
@@ -1001,6 +1002,13 @@ const HORIZON_LABELS = {
 
 function renderEnps(p){
   const container = document.getElementById('enpsContainer');
+
+  // ВРЕМЕННАЯ ДИАГНОСТИКА — показывает сырые данные на странице
+  const debugBox = document.createElement('div');
+  debugBox.style.cssText = 'background:#2A2F38; padding:12px; border-radius:8px; font-size:11px; font-family:monospace; margin-bottom:12px; white-space:pre-wrap; word-break:break-all;';
+  debugBox.textContent = 'DEBUG p.enps = ' + JSON.stringify(p.enps) + '\n\nDEBUG window.__rawEnpsRows__ = ' + JSON.stringify(window.__rawEnpsRows__ || 'не сохранено');
+  container.parentElement.insertBefore(debugBox, container);
+
   if(!p.enps){
     container.innerHTML = '<p class="text-block-empty">Сотрудник пока не заполнил опрос eNPS</p>';
     return;
