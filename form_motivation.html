@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Опрос мотивации — раз в полгода</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --soft:#3DD9A8;
+    --soft-soft:#3DD9A81A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:56px 32px 100px;}
+
+  .eyebrow{
+    font-size:12px;
+    font-weight:600;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:32px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:12px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; max-width:520px; margin-bottom:36px;}
+
+  .field-group{margin-bottom:24px;}
+  label.meta-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .autocomplete-box{position:relative;}
+  input[type=text]{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  .autocomplete-results{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0; right:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    z-index:20;
+    max-height:240px;
+    overflow-y:auto;
+  }
+  .autocomplete-item{
+    padding:12px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .autocomplete-item:last-child{border-bottom:none;}
+  .autocomplete-item:hover{background:var(--panel-2);}
+  .autocomplete-empty{
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--text-faint);
+    font-style:italic;
+  }
+
+  .intro-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:32px;
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+  }
+
+  .skill-row{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:12px;
+  }
+  .skill-row-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:4px;
+    gap:12px;
+  }
+  .skill-name{font-size:15px; font-weight:600;}
+  .skill-value{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    font-weight:700;
+    min-width:34px;
+    text-align:right;
+    color:var(--soft);
+  }
+  .skill-desc{
+    font-size:13px;
+    color:var(--text-faint);
+    margin-bottom:14px;
+    line-height:1.45;
+  }
+  input[type=range]{
+    width:100%;
+    -webkit-appearance:none;
+    height:6px;
+    border-radius:4px;
+    background:var(--line);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--text);
+    cursor:pointer;
+    border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--soft);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text-faint);
+    margin-top:6px;
+  }
+
+  textarea{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:14px 16px;
+    border-radius:10px;
+    outline:none;
+    resize:vertical;
+    min-height:90px;
+    transition:border-color .15s;
+  }
+  textarea:focus{border-color:var(--accent);}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+    background:linear-gradient(135deg, var(--accent), #6E5CE8);
+    color:#fff;
+    margin-top:12px;
+  }
+  button:disabled{opacity:.6; cursor:not-allowed;}
+
+  .hidden{display:none !important;}
+  .done-screen{text-align:center; padding:100px 20px;}
+  .done-icon{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--soft-soft);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="formArea">
+    <div class="eyebrow">Опрос мотивации · раз в полгода</div>
+    <h1>Что тебя мотивирует?</h1>
+    <p class="subtitle">Этот опрос помогает HRBP понять, что удерживает людей в компании — не для оценки результативности, а для программ удержания.</p>
+
+    <div class="intro-box">
+      Оцени каждый фактор от 1 до 10: насколько он важен для тебя именно сейчас в работе. Здесь нет правильных ответов — у разных людей разные приоритеты.
+    </div>
+
+    <div class="field-group">
+      <label class="meta-label">Имя и фамилия</label>
+      <div class="autocomplete-box">
+        <input type="text" id="name" placeholder="Начни вводить имя..." autocomplete="off" required>
+        <div class="autocomplete-results hidden" id="nameResults"></div>
+      </div>
+    </div>
+
+    <div id="factorsContainer"></div>
+
+    <div class="field-group" style="margin-top:24px;">
+      <label class="meta-label">Что сейчас сильнее всего мешает тебе работать эффективнее? (необязательно)</label>
+      <textarea id="comment" placeholder="Можно оставить пустым"></textarea>
+    </div>
+
+    <button type="button" id="submitBtn" onclick="submitForm()">Отправить</button>
+  </div>
+
+  <div class="done-screen hidden" id="doneScreen">
+    <div class="done-icon">✓</div>
+    <h1>Спасибо!</h1>
+    <p class="subtitle" style="margin:0 auto;">Ответ сохранён. Эта информация помогает HRBP строить программы удержания и развития.</p>
+  </div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+const FACTORS = [
+  { id:"interesting_tasks", name:"Интересные задачи", desc:"Работа сама по себе увлекает и развивает" },
+  { id:"recognition", name:"Признание", desc:"Вклад замечают и ценят коллеги и руководитель" },
+  { id:"autonomy", name:"Автономность", desc:"Возможность самостоятельно принимать решения" },
+  { id:"growth", name:"Рост", desc:"Возможность развиваться профессионально и расти в роли" },
+  { id:"salary", name:"Доход", desc:"Уровень зарплаты и финансовых бонусов" },
+  { id:"manager", name:"Руководитель", desc:"Отношения и поддержка от непосредственного лида" },
+  { id:"team", name:"Команда", desc:"Атмосфера и отношения внутри команды" },
+  { id:"worklife_balance", name:"Баланс работы и жизни", desc:"Гибкий график, отсутствие переработок" },
+];
+
+const ratings = {};
+FACTORS.forEach(f => ratings[f.id] = 5);
+
+function renderFactors(){
+  const container = document.getElementById('factorsContainer');
+  container.innerHTML = FACTORS.map(f => `
+    <div class="skill-row">
+      <div class="skill-row-head">
+        <span class="skill-name">${f.name}</span>
+        <span class="skill-value" data-value-for="${f.id}">${ratings[f.id]}</span>
+      </div>
+      <p class="skill-desc">${f.desc}</p>
+      <input type="range" min="1" max="10" value="${ratings[f.id]}" data-factor-id="${f.id}">
+      <div class="scale-labels"><span>1</span><span>10</span></div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('input[type=range]').forEach(slider => {
+    slider.addEventListener('input', (e) => {
+      const id = e.target.dataset.factorId;
+      const val = parseInt(e.target.value);
+      ratings[id] = val;
+      document.querySelector(`[data-value-for="${id}"]`).textContent = val;
+    });
+  });
+}
+renderFactors();
+
+/* ====== NAME AUTOCOMPLETE ====== */
+let employeesList = [];
+
+async function loadEmployees(){
+  try{
+    const res = await fetch(WEB_APP_URL + "?type=employees");
+    const data = await res.json();
+    employeesList = data.employees || [];
+  }catch(err){
+    employeesList = [];
+  }
+}
+
+const nameInput = document.getElementById('name');
+const nameResults = document.getElementById('nameResults');
+
+nameInput.addEventListener('input', () => {
+  const q = nameInput.value.trim().toLowerCase();
+  if(!q || employeesList.length === 0){ nameResults.classList.add('hidden'); return; }
+
+  const matches = employeesList.filter(e => e.name.toLowerCase().includes(q));
+  if(matches.length === 0){
+    nameResults.innerHTML = '<div class="autocomplete-empty">Не найдено в списке — можно ввести вручную</div>';
+    nameResults.classList.remove('hidden');
+    return;
+  }
+
+  nameResults.innerHTML = matches.map(e => `
+    <div class="autocomplete-item" data-name="${e.name.replace(/"/g,'&quot;')}">${e.name}</div>
+  `).join('');
+  nameResults.classList.remove('hidden');
+});
+
+nameResults.addEventListener('click', (e) => {
+  const item = e.target.closest('.autocomplete-item');
+  if(!item || !item.dataset.name) return;
+  nameInput.value = item.dataset.name;
+  nameResults.classList.add('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.autocomplete-box')) nameResults.classList.add('hidden');
+});
+
+loadEmployees();
+
+/* ====== SUBMIT ====== */
+async function submitForm(){
+  const name = nameInput.value.trim();
+  if(!name){ alert('Укажи имя.'); return; }
+
+  const data = {
+    name: name,
+    rater: "motivation",
+    date: new Date().toISOString().slice(0,10),
+    factors: ratings,
+    comment: document.getElementById('comment').value.trim()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = "Отправляем...";
+  btn.disabled = true;
+
+  try{
+    await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(data) });
+    document.getElementById('formArea').classList.add('hidden');
+    document.getElementById('doneScreen').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    downloadJSON(data);
+    alert('Не удалось отправить онлайн — файл сохранён на компьютер. Передай его HRBP вручную.');
+    btn.textContent = "Отправить";
+    btn.disabled = false;
+  }
+}
+
+function downloadJSON(data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safeName = data.name.replace(/\s+/g,'_');
+  a.download = `motivation_${safeName}_${data.date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>

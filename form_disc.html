@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DISC — раз в год</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --purple:#9B7BF0;
+    --purple-soft:#9B7BF01A;
+    --most:#3DD9A8;
+    --most-soft:#3DD9A81A;
+    --least:#E0556B;
+    --least-soft:#E0556B1A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:56px 32px 100px;}
+
+  .eyebrow{
+    font-size:12px;
+    font-weight:600;
+    color:var(--purple);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:12px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; margin-bottom:30px;}
+
+  .field-group{margin-bottom:24px;}
+  label.meta-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .autocomplete-box{position:relative;}
+  input[type=text]{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  .autocomplete-results{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0; right:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    z-index:20;
+    max-height:240px;
+    overflow-y:auto;
+  }
+  .autocomplete-item{
+    padding:12px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .autocomplete-item:last-child{border-bottom:none;}
+  .autocomplete-item:hover{background:var(--panel-2);}
+  .autocomplete-empty{
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--text-faint);
+    font-style:italic;
+  }
+
+  .intro-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:32px;
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+  }
+
+  .block-counter{
+    font-size:12px;
+    color:var(--text-faint);
+    margin-bottom:10px;
+    font-weight:600;
+  }
+
+  .disc-block{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:16px;
+  }
+  .statement-row{
+    display:grid;
+    grid-template-columns:1fr 70px 70px;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .statement-row:last-child{border-bottom:none;}
+  .statement-text{font-size:14px; line-height:1.4;}
+  .col-header{
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    text-align:center;
+    color:var(--text-faint);
+    letter-spacing:.04em;
+  }
+  .pill-btn{
+    width:44px; height:32px;
+    margin:0 auto;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    cursor:pointer;
+    transition:all .12s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .pill-btn.most.selected{background:var(--most); border-color:var(--most);}
+  .pill-btn.least.selected{background:var(--least); border-color:var(--least);}
+  .pill-btn:disabled{opacity:.3; cursor:not-allowed;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+    background:linear-gradient(135deg, var(--purple), #6E5CE8);
+    color:#fff;
+    margin-top:8px;
+  }
+  button:disabled{opacity:.4; cursor:not-allowed;}
+
+  .progress-bar{
+    height:4px;
+    background:var(--line);
+    border-radius:4px;
+    margin-bottom:32px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--purple);
+    border-radius:4px;
+    transition:width .2s;
+    width:0%;
+  }
+
+  .hidden{display:none !important;}
+  .done-screen{text-align:center; padding:100px 20px;}
+  .done-icon{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--purple-soft);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="formArea">
+    <div class="eyebrow">DISC · раз в год</div>
+    <h1>Стиль поведения</h1>
+    <p class="subtitle">Этот опрос не оценивает результативность — он показывает твой естественный стиль работы и коммуникации. Используется для коучинга и тимбилдинга.</p>
+
+    <div class="intro-box">
+      В каждом блоке 4 утверждения. Отметь одно, которое <b>больше всего</b> похоже на тебя, и одно, которое <b>меньше всего</b> похоже — одно и то же утверждение нельзя отметить дважды.
+    </div>
+
+    <div class="field-group">
+      <label class="meta-label">Имя и фамилия</label>
+      <div class="autocomplete-box">
+        <input type="text" id="name" placeholder="Начни вводить имя..." autocomplete="off" required>
+        <div class="autocomplete-results hidden" id="nameResults"></div>
+      </div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div id="blocksContainer"></div>
+
+    <button type="button" id="submitBtn" onclick="submitForm()" disabled>Отправить</button>
+  </div>
+
+  <div class="done-screen hidden" id="doneScreen">
+    <div class="done-icon">✓</div>
+    <h1>Спасибо!</h1>
+    <p class="subtitle" style="margin:0 auto;">Ответ сохранён.</p>
+  </div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+const BLOCKS = [
+  [
+    { text:"Беру на себя ответственность и двигаюсь к результату без промедления", axis:"D" },
+    { text:"Легко нахожу общий язык с новыми людьми", axis:"I" },
+    { text:"Предпочитаю стабильность и предсказуемый ритм работы", axis:"S" },
+    { text:"Тщательно проверяю детали перед тем как двигаться дальше", axis:"C" },
+  ],
+  [
+    { text:"Прямо говорю о проблемах, даже если это может быть неудобно", axis:"D" },
+    { text:"Заряжаю команду энергией и энтузиазмом", axis:"I" },
+    { text:"Терпеливо поддерживаю коллег в сложные моменты", axis:"S" },
+    { text:"Следую установленным процессам и стандартам", axis:"C" },
+  ],
+  [
+    { text:"Быстро принимаю решения, даже под давлением", axis:"D" },
+    { text:"Люблю быть в центре внимания на встречах", axis:"I" },
+    { text:"Избегаю конфликтов и ищу компромиссы", axis:"S" },
+    { text:"Анализирую данные перед тем как сделать вывод", axis:"C" },
+  ],
+  [
+    { text:"Ставлю амбициозные цели и иду к ним напрямик", axis:"D" },
+    { text:"Свободно делюсь идеями в групповых обсуждениях", axis:"I" },
+    { text:"Ценю долгосрочные отношения с коллегами", axis:"S" },
+    { text:"Предпочитаю работать по чёткому плану", axis:"C" },
+  ],
+  [
+    { text:"Не боюсь рисковать ради результата", axis:"D" },
+    { text:"Вдохновляю других своим оптимизмом", axis:"I" },
+    { text:"Спокойно работаю в размеренном темпе", axis:"S" },
+    { text:"Замечаю несоответствия и неточности первым", axis:"C" },
+  ],
+  [
+    { text:"Беру лидерство в сложных ситуациях", axis:"D" },
+    { text:"Легко импровизирую и подстраиваюсь на ходу", axis:"I" },
+    { text:"Внимательно слушаю, прежде чем высказать мнение", axis:"S" },
+    { text:"Предпочитаю письменные инструкции устным", axis:"C" },
+  ],
+  [
+    { text:"Иду напрямую к цели, не тратя время на формальности", axis:"D" },
+    { text:"Умею убеждать и продавать идеи", axis:"I" },
+    { text:"Помогаю команде сохранять гармонию", axis:"S" },
+    { text:"Перепроверяю работу несколько раз перед сдачей", axis:"C" },
+  ],
+  [
+    { text:"Комфортно чувствую себя, принимая решения за других", axis:"D" },
+    { text:"Активно участвую в неформальном общении в команде", axis:"I" },
+    { text:"Адаптируюсь под нужды команды, даже в ущерб своим планам", axis:"S" },
+    { text:"Ценю точность формулировок и определений", axis:"C" },
+  ],
+  [
+    { text:"Уверенно отстаиваю свою позицию в споре", axis:"D" },
+    { text:"Энергично включаюсь в новые проекты", axis:"I" },
+    { text:"Предпочитаю предсказуемость внезапным изменениям", axis:"S" },
+    { text:"Систематизирую информацию перед принятием решения", axis:"C" },
+  ],
+  [
+    { text:"Двигаюсь быстро и ожидаю того же от других", axis:"D" },
+    { text:"Свободно выражаю эмоции на работе", axis:"I" },
+    { text:"Готов уступить в малом, чтобы сохранить отношения", axis:"S" },
+    { text:"Доверяю фактам больше, чем интуиции", axis:"C" },
+  ],
+];
+
+const answers = BLOCKS.map(() => ({ most: null, least: null }));
+
+function renderBlocks(){
+  const container = document.getElementById('blocksContainer');
+  container.innerHTML = BLOCKS.map((block, blockIdx) => `
+    <div class="block-counter">Блок ${blockIdx + 1} из ${BLOCKS.length}</div>
+    <div class="disc-block">
+      <div class="statement-row">
+        <span></span>
+        <span class="col-header">Больше</span>
+        <span class="col-header">Меньше</span>
+      </div>
+      ${block.map((stmt, stmtIdx) => `
+        <div class="statement-row">
+          <span class="statement-text">${stmt.text}</span>
+          <div class="pill-btn most" data-block="${blockIdx}" data-stmt="${stmtIdx}" data-type="most" onclick="selectAnswer(${blockIdx}, ${stmtIdx}, 'most')"></div>
+          <div class="pill-btn least" data-block="${blockIdx}" data-stmt="${stmtIdx}" data-type="least" onclick="selectAnswer(${blockIdx}, ${stmtIdx}, 'least')"></div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+renderBlocks();
+
+function selectAnswer(blockIdx, stmtIdx, type){
+  const other = type === 'most' ? 'least' : 'most';
+  if(answers[blockIdx][other] === stmtIdx) return;
+
+  answers[blockIdx][type] = stmtIdx;
+  updateBlockUI(blockIdx);
+  updateProgress();
+}
+
+function updateBlockUI(blockIdx){
+  document.querySelectorAll(`.pill-btn[data-block="${blockIdx}"]`).forEach(btn => {
+    const stmtIdx = parseInt(btn.dataset.stmt);
+    const type = btn.dataset.type;
+    btn.classList.toggle('selected', answers[blockIdx][type] === stmtIdx);
+
+    const otherType = type === 'most' ? 'least' : 'most';
+    btn.disabled = answers[blockIdx][otherType] === stmtIdx;
+  });
+}
+
+function updateProgress(){
+  const completed = answers.filter(a => a.most !== null && a.least !== null).length;
+  const pct = Math.round((completed / BLOCKS.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('submitBtn').disabled = completed < BLOCKS.length;
+}
+
+let employeesList = [];
+
+async function loadEmployees(){
+  try{
+    const res = await fetch(WEB_APP_URL + "?type=employees");
+    const data = await res.json();
+    employeesList = data.employees || [];
+  }catch(err){
+    employeesList = [];
+  }
+}
+
+const nameInput = document.getElementById('name');
+const nameResults = document.getElementById('nameResults');
+
+nameInput.addEventListener('input', () => {
+  const q = nameInput.value.trim().toLowerCase();
+  if(!q || employeesList.length === 0){ nameResults.classList.add('hidden'); return; }
+
+  const matches = employeesList.filter(e => e.name.toLowerCase().includes(q));
+  if(matches.length === 0){
+    nameResults.innerHTML = '<div class="autocomplete-empty">Не найдено в списке — можно ввести вручную</div>';
+    nameResults.classList.remove('hidden');
+    return;
+  }
+
+  nameResults.innerHTML = matches.map(e => `
+    <div class="autocomplete-item" data-name="${e.name.replace(/"/g,'&quot;')}">${e.name}</div>
+  `).join('');
+  nameResults.classList.remove('hidden');
+});
+
+nameResults.addEventListener('click', (e) => {
+  const item = e.target.closest('.autocomplete-item');
+  if(!item || !item.dataset.name) return;
+  nameInput.value = item.dataset.name;
+  nameResults.classList.add('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.autocomplete-box')) nameResults.classList.add('hidden');
+});
+
+loadEmployees();
+
+function calculateScores(){
+  const scores = { D: 0, I: 0, S: 0, C: 0 };
+  BLOCKS.forEach((block, blockIdx) => {
+    const mostIdx = answers[blockIdx].most;
+    const leastIdx = answers[blockIdx].least;
+    if(mostIdx !== null) scores[block[mostIdx].axis] += 1;
+    if(leastIdx !== null) scores[block[leastIdx].axis] -= 1;
+  });
+  return scores;
+}
+
+async function submitForm(){
+  const name = nameInput.value.trim();
+  if(!name){ alert('Укажи имя.'); return; }
+
+  const incomplete = answers.some(a => a.most === null || a.least === null);
+  if(incomplete){ alert('Заполни все блоки — в каждом нужно отметить и «Больше», и «Меньше».'); return; }
+
+  const scores = calculateScores();
+
+  const data = {
+    name: name,
+    rater: "disc",
+    date: new Date().toISOString().slice(0,10),
+    scores: scores
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = "Отправляем...";
+  btn.disabled = true;
+
+  try{
+    await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(data) });
+    document.getElementById('formArea').classList.add('hidden');
+    document.getElementById('doneScreen').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    downloadJSON(data);
+    alert('Не удалось отправить онлайн — файл сохранён на компьютер. Передай его HRBP вручную.');
+    btn.textContent = "Отправить";
+    btn.disabled = false;
+  }
+}
+
+function downloadJSON(data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safeName = data.name.replace(/\s+/g,'_');
+  a.download = `disc_${safeName}_${data.date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>

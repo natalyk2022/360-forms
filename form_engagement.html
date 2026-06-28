@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Опрос вовлечённости — анонимно</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171C;
+    --panel:#1B1F26;
+    --panel-2:#20242C;
+    --line:#2A2F38;
+    --text:#EDEFF2;
+    --text-dim:#9AA1AC;
+    --text-faint:#5C636E;
+    --accent:#4C7CF0;
+    --accent-soft:#4C7CF022;
+    --green:#7BC97E;
+    --green-soft:#7BC97E1A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:56px 32px 100px;}
+
+  .eyebrow{
+    font-size:12px;
+    font-weight:600;
+    color:var(--green);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin-bottom:12px;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; margin-bottom:30px;}
+
+  .intro-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:32px;
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+  }
+  .intro-box b{color:var(--text);}
+
+  .field-group{margin-bottom:24px;}
+  label.meta-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  select{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    cursor:pointer;
+    appearance:none;
+    transition:border-color .15s;
+  }
+  select:focus{border-color:var(--accent);}
+
+  .level-label{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:var(--green);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin:32px 0 12px;
+  }
+  .level-label:first-of-type{margin-top:0;}
+
+  .question-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:12px;
+  }
+  .q-text{
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:14px;
+    line-height:1.4;
+  }
+  .likert{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+  }
+  .likert-btn{
+    padding:10px 4px;
+    text-align:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+    font-size:11px;
+    color:var(--text-dim);
+    transition:all .12s;
+    line-height:1.3;
+  }
+  .likert-btn:hover{border-color:var(--green);}
+  .likert-btn.selected{background:var(--green); border-color:var(--green); color:#0E2010;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+    background:linear-gradient(135deg, var(--green), #4F9E55);
+    color:#0E2010;
+    margin-top:24px;
+  }
+  button:disabled{opacity:.4; cursor:not-allowed;}
+
+  .hidden{display:none !important;}
+  .done-screen{text-align:center; padding:100px 20px;}
+  .done-icon{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--green-soft);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="formArea">
+    <div class="eyebrow">Вовлечённость · раз в полгода</div>
+    <h1>Насколько ты включён в работу?</h1>
+    <p class="subtitle">Этот опрос измеряет вовлечённость — отдельно от лояльности (eNPS) и удовлетворённости условиями. Полностью анонимный: имя не указывается, только команда.</p>
+
+    <div class="intro-box">
+      Опрос <b>полностью анонимен</b> — мы не собираем твоё имя, только команду, чтобы видеть общую картину по отделам. Оцени каждое утверждение от 1 (совсем не согласен) до 5 (полностью согласен).
+    </div>
+
+    <div class="field-group">
+      <label class="meta-label">Твоя команда / отдел</label>
+      <select id="teamSelect">
+        <option value="">Выбери команду...</option>
+      </select>
+    </div>
+
+    <div id="questionsContainer"></div>
+
+    <button type="button" id="submitBtn" onclick="submitForm()" disabled>Отправить анонимно</button>
+  </div>
+
+  <div class="done-screen hidden" id="doneScreen">
+    <div class="done-icon">✓</div>
+    <h1>Спасибо!</h1>
+    <p class="subtitle" style="margin:0 auto;">Ответ сохранён анонимно. Эти данные помогают понять, где компания теряет вовлечённость людей.</p>
+  </div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec";
+
+const LEVELS = [
+  {
+    name: "Базовые условия",
+    questions: [
+      { id:"q1_expectations", text:"Я точно знаю, что от меня ожидают на работе" },
+      { id:"q2_resources", text:"У меня есть всё необходимое, чтобы качественно делать свою работу" },
+    ]
+  },
+  {
+    name: "Признание",
+    questions: [
+      { id:"q3_recognition", text:"За последние 7 дней меня отметили за хорошую работу" },
+      { id:"q4_cares", text:"Руководитель или коллега относится ко мне как к личности, а не просто к ресурсу" },
+      { id:"q5_development", text:"Кто-то на работе поддерживает моё развитие" },
+    ]
+  },
+  {
+    name: "Команда",
+    questions: [
+      { id:"q6_opinion", text:"Моё мнение учитывается на работе" },
+      { id:"q7_mission", text:"Миссия компании создаёт у меня ощущение значимости моей работы" },
+      { id:"q8_quality", text:"Коллеги в команде стремятся работать качественно" },
+    ]
+  },
+  {
+    name: "Рост",
+    questions: [
+      { id:"q9_friend", text:"У меня есть близкий по духу человек среди коллег" },
+      { id:"q10_progress", text:"За последние 6 месяцев со мной говорили о моём развитии и прогрессе" },
+      { id:"q11_growth", text:"В этом году у меня были возможности учиться и расти" },
+    ]
+  },
+];
+
+const answers = {};
+LEVELS.forEach(level => level.questions.forEach(q => answers[q.id] = null));
+
+const LIKERT_LABELS = ["Совсем не согласен","Скорее не согласен","Нейтрально","Скорее согласен","Полностью согласен"];
+
+function renderQuestions(){
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = LEVELS.map(level => `
+    <div class="level-label">${level.name}</div>
+    ${level.questions.map(q => `
+      <div class="question-card">
+        <div class="q-text">${q.text}</div>
+        <div class="likert" data-question="${q.id}">
+          ${LIKERT_LABELS.map((label, idx) => `
+            <div class="likert-btn" data-value="${idx + 1}" onclick="selectAnswer('${q.id}', ${idx + 1})">${idx + 1}<br>${label}</div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `).join('');
+}
+renderQuestions();
+
+function selectAnswer(questionId, value){
+  answers[questionId] = value;
+  document.querySelectorAll(`.likert[data-question="${questionId}"] .likert-btn`).forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.value) === value);
+  });
+  updateSubmitState();
+}
+
+function updateSubmitState(){
+  const allAnswered = Object.values(answers).every(v => v !== null);
+  const teamSelected = document.getElementById('teamSelect').value !== "";
+  document.getElementById('submitBtn').disabled = !(allAnswered && teamSelected);
+}
+
+document.getElementById('teamSelect').addEventListener('change', updateSubmitState);
+
+async function loadTeams(){
+  try{
+    const res = await fetch(WEB_APP_URL + "?type=teams");
+    const data = await res.json();
+    const select = document.getElementById('teamSelect');
+    (data.teams || []).forEach(team => {
+      const opt = document.createElement('option');
+      opt.value = team;
+      opt.textContent = team;
+      select.appendChild(opt);
+    });
+  }catch(err){
+  }
+}
+loadTeams();
+
+function calculateIndex(){
+  const values = Object.values(answers);
+  const avg = values.reduce((a,b) => a+b, 0) / values.length;
+  return Math.round(avg * 20);
+}
+
+async function submitForm(){
+  const team = document.getElementById('teamSelect').value;
+  if(!team){ alert('Выбери команду.'); return; }
+
+  const data = {
+    rater: "engagement",
+    date: new Date().toISOString().slice(0,10),
+    team: team,
+    answers: answers,
+    index: calculateIndex()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = "Отправляем...";
+  btn.disabled = true;
+
+  try{
+    await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(data) });
+    document.getElementById('formArea').classList.add('hidden');
+    document.getElementById('doneScreen').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    downloadJSON(data);
+    alert('Не удалось отправить онлайн — файл сохранён на компьютер. Передай его HRBP вручную.');
+    btn.textContent = "Отправить анонимно";
+    btn.disabled = false;
+  }
+}
+
+function downloadJSON(data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `engagement_${data.team}_${data.date}_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>
