@@ -24,6 +24,7 @@
     --lead:#9B7BF0;
     --lead-soft:#9B7BF01A;
     --danger:#E0556B;
+    --danger-soft:#E0556B1A;
     --radius:14px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -189,9 +190,25 @@
   .bar-fill.self{background:var(--accent);}
   .bar-fill.lead{background:var(--lead);}
   .bar-fill.peer{background:var(--soft);}
+  .bar-fill.motivation{background:#3DD9A8;}
+  .bar-fill.disc-d{background:#E0556B;}
+  .bar-fill.disc-i{background:#E8A33D;}
+  .bar-fill.disc-s{background:#3DD9A8;}
+  .bar-fill.disc-c{background:#4C7CF0;}
   .bar-row{display:flex; align-items:center; gap:8px;}
   .bar-tag{font-size:10px; color:var(--text-faint); width:38px; flex-shrink:0;}
   .bar-val{font-size:11px; color:var(--text-dim); width:24px; text-align:right; flex-shrink:0;}
+
+  .factor-row{margin-bottom:12px;}
+  .factor-row:last-child{margin-bottom:0;}
+  .factor-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .factor-label span:last-child{color:var(--text-dim); font-weight:400;}
 
   /* ===== TEXT BLOCKS ===== */
   .text-block{margin-bottom:16px;}
@@ -257,6 +274,46 @@
   button.save-btn:disabled{opacity:.5; cursor:not-allowed;}
 
   svg.radar-svg{width:100%; height:auto;}
+
+  /* ===== INSIGHTS (расхождения self/lead/peer) ===== */
+  .insights-panel{margin-bottom:24px;}
+  .insight-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .insight-row:last-child{border-bottom:none;}
+  .insight-icon{
+    width:28px; height:28px;
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .insight-icon.big{background:var(--danger-soft); color:var(--danger);}
+  .insight-icon.medium{background:var(--hard-soft); color:var(--hard);}
+  .insight-body{flex:1;}
+  .insight-title{font-size:14px; font-weight:600; margin-bottom:3px;}
+  .insight-detail{font-size:12.5px; color:var(--text-dim); line-height:1.5;}
+  .insight-empty{
+    color:var(--text-faint);
+    font-style:italic;
+    font-size:13px;
+    padding:8px 0;
+  }
+  .insight-diff-tag{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:6px;
+    margin-left:6px;
+  }
+  .insight-diff-tag.hard{background:var(--hard-soft); color:var(--hard);}
+  .insight-diff-tag.soft{background:var(--soft-soft); color:var(--soft);}
 </style>
 </head>
 <body>
@@ -291,6 +348,12 @@
         <div class="profile-sources" id="profileSources" style="margin-bottom:10px;"></div>
         <button class="back-btn" onclick="resetView()">← К поиску</button>
       </div>
+    </div>
+
+    <div class="panel insights-panel">
+      <div class="panel-title">Главные расхождения</div>
+      <div class="panel-sub">Где оценки разошлись сильнее всего — это и есть материал для плана развития</div>
+      <div id="insightsContainer"></div>
     </div>
 
     <div class="grid-2">
@@ -336,6 +399,20 @@
           <div class="text-block-label">Зоны роста (от коллег)</div>
           <div class="text-block-content" id="growthZonesText"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Мотивация (Герцберг)</div>
+        <div class="panel-sub">Что важно сотруднику сейчас, шкала 1–10</div>
+        <div id="motivationContainer"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">DISC профиль</div>
+        <div class="panel-sub">Стиль поведения — не оценка, для коучинга</div>
+        <div id="discContainer"></div>
       </div>
     </div>
 
@@ -469,6 +546,24 @@ function buildDatabase(raw){
     }
   });
 
+  // Motivation: ["Дата","Имя","Факторы (JSON)","Комментарий"] — берём последнюю запись по имени
+  const motivationRows = raw.motivation || [];
+  for(let i = 1; i < motivationRows.length; i++){
+    const [date, name, factorsJson, comment] = motivationRows[i];
+    if(!name) continue;
+    if(!database[name]) database[name] = { peers: [] };
+    database[name].motivation = { date, factors: safeParse(factorsJson), comment };
+  }
+
+  // Disc: ["Дата","Имя","Баллы D/I/S/C (JSON)"] — берём последнюю запись по имени
+  const discRows = raw.disc || [];
+  for(let i = 1; i < discRows.length; i++){
+    const [date, name, scoresJson] = discRows[i];
+    if(!name) continue;
+    if(!database[name]) database[name] = { peers: [] };
+    database[name].disc = { date, scores: safeParse(scoresJson) };
+  }
+
   const planRows = raw.plans || [];
   for(let i = 1; i < planRows.length; i++){
     const [date, name, planText] = planRows[i];
@@ -538,10 +633,13 @@ function openProfile(name){
     <span class="badge ${p.peers.length ? 'peer' : 'missing'}">Peer ${p.peers.length ? '×'+p.peers.length : '—'}</span>
   `;
 
+  renderInsights(p, role);
   renderHardCompare(p, role);
   renderSoftCompare(p);
   renderRadar(p, role);
   renderComments(p);
+  renderMotivation(p);
+  renderDisc(p);
   renderPlan(name);
 }
 
@@ -553,6 +651,79 @@ function resetView(){
 }
 
 /* ====== HARD SKILLS COMPARE (self vs lead) ====== */
+/* ====== INSIGHTS: главные расхождения self vs lead vs peer ====== */
+function renderInsights(p, role){
+  const container = document.getElementById('insightsContainer');
+  const roleData = HARD_SKILLS[role];
+  const peerAvg = averagePeerSoft(p.peers);
+  const diffs = [];
+
+  // Hard skills: self vs lead
+  if(roleData && p.self?.hard && p.lead?.hard){
+    roleData.skills.forEach(skill => {
+      const selfVal = p.self.hard[skill.id];
+      const leadVal = p.lead.hard[skill.id];
+      if(selfVal !== undefined && leadVal !== undefined){
+        const diff = selfVal - leadVal;
+        if(diff !== 0){
+          diffs.push({
+            type:'hard', name:skill.name, diff,
+            selfVal, otherVal:leadVal, otherLabel:'лид'
+          });
+        }
+      }
+    });
+  }
+
+  // Soft skills: self vs peer average
+  if(p.self?.soft && Object.keys(peerAvg).length){
+    SOFT_SKILLS.forEach(skill => {
+      const selfVal = p.self.soft[skill.id];
+      const peerVal = peerAvg[skill.id];
+      if(selfVal !== undefined && peerVal !== undefined){
+        const diff = selfVal - peerVal;
+        if(Math.abs(diff) >= 0.5){
+          diffs.push({
+            type:'soft', name:skill.name, diff,
+            selfVal, otherVal:peerVal, otherLabel:'коллеги'
+          });
+        }
+      }
+    });
+  }
+
+  if(diffs.length === 0){
+    container.innerHTML = '<p class="insight-empty">Пока недостаточно данных для сравнения — нужны минимум само- и ещё одна оценка по тем же навыкам.</p>';
+    return;
+  }
+
+  diffs.sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+  const top = diffs.slice(0, 5);
+
+  container.innerHTML = top.map(d => {
+    const absDiff = Math.abs(d.diff);
+    const severity = absDiff >= 3 ? 'big' : 'medium';
+    const direction = d.diff > 0 ? 'выше' : 'ниже';
+    const sign = d.diff > 0 ? '+' : '';
+    const tagClass = d.type === 'hard' ? 'hard' : 'soft';
+
+    return `
+      <div class="insight-row">
+        <div class="insight-icon ${severity}">${absDiff >= 3 ? '!!' : '!'}</div>
+        <div class="insight-body">
+          <div class="insight-title">
+            ${d.name}
+            <span class="insight-diff-tag ${tagClass}">${sign}${d.diff.toFixed(1)}</span>
+          </div>
+          <div class="insight-detail">
+            Сам оценил на ${d.selfVal}, ${d.otherLabel} — на ${d.otherVal}. Самооценка ${direction} на ${absDiff.toFixed(1)} балла.
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderHardCompare(p, role){
   const container = document.getElementById('hardCompare');
   const roleData = HARD_SKILLS[role];
@@ -703,6 +874,81 @@ function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+/* ====== MOTIVATION ====== */
+const MOTIVATION_LABELS = {
+  interesting_tasks: "Интересные задачи",
+  recognition: "Признание",
+  autonomy: "Автономность",
+  growth: "Рост",
+  salary: "Доход",
+  manager: "Руководитель",
+  team: "Команда",
+  worklife_balance: "Баланс работы и жизни",
+};
+
+function renderMotivation(p){
+  const container = document.getElementById('motivationContainer');
+  if(!p.motivation || !p.motivation.factors || Object.keys(p.motivation.factors).length === 0){
+    container.innerHTML = '<p class="text-block-empty">Сотрудник пока не заполнил опрос мотивации</p>';
+    return;
+  }
+
+  const factors = p.motivation.factors;
+  // Сортируем по убыванию значения — самые важные факторы сверху
+  const sorted = Object.entries(factors).sort((a,b) => b[1] - a[1]);
+
+  container.innerHTML = sorted.map(([key, val]) => {
+    const label = MOTIVATION_LABELS[key] || key;
+    const pct = (Number(val) / 10) * 100;
+    return `
+      <div class="factor-row">
+        <div class="factor-label"><span>${label}</span><span>${val} / 10</span></div>
+        <div class="bar-track"><div class="bar-fill motivation" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+
+  if(p.motivation.comment){
+    container.innerHTML += `
+      <div class="text-block" style="margin-top:16px;">
+        <div class="text-block-label">Что мешает работать эффективнее</div>
+        <div class="text-block-content">${escapeHtml(p.motivation.comment)}</div>
+      </div>
+    `;
+  }
+}
+
+/* ====== DISC ====== */
+const DISC_LABELS = {
+  D: { name: "Доминирование", desc: "Напористость, ориентация на результат", cls: "disc-d" },
+  I: { name: "Влияние", desc: "Коммуникация, убеждение", cls: "disc-i" },
+  S: { name: "Стабильность", desc: "Поддержка, постоянство", cls: "disc-s" },
+  C: { name: "Соответствие", desc: "Аналитичность, внимание к деталям", cls: "disc-c" },
+};
+
+function renderDisc(p){
+  const container = document.getElementById('discContainer');
+  if(!p.disc || !p.disc.scores || Object.keys(p.disc.scores).length === 0){
+    container.innerHTML = '<p class="text-block-empty">Сотрудник пока не заполнил опрос DISC</p>';
+    return;
+  }
+
+  const scores = p.disc.scores;
+  const maxAbs = Math.max(...Object.values(scores).map(v => Math.abs(Number(v))), 1);
+
+  container.innerHTML = Object.keys(DISC_LABELS).map(axis => {
+    const val = Number(scores[axis] || 0);
+    const info = DISC_LABELS[axis];
+    const pct = Math.min(100, (Math.abs(val) / maxAbs) * 100);
+    return `
+      <div class="factor-row">
+        <div class="factor-label"><span>${info.name} (${axis})</span><span>${val > 0 ? '+' : ''}${val}</span></div>
+        <div class="bar-track"><div class="bar-fill ${info.cls}" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ====== PLAN ====== */
