@@ -147,6 +147,24 @@
   }
   .level-bar-fill{height:100%; border-radius:6px; background:var(--teal); transition:width .3s;}
 
+  .team-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .team-row:last-child{border-bottom:none;}
+  .team-name{font-size:13px; font-weight:600;}
+  .team-sub{font-size:11px; color:var(--text-faint); margin-top:2px;}
+  .team-value{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    font-weight:700;
+  }
+  .team-value.coral{color:var(--coral);}
+  .team-value.teal{color:var(--teal);}
+
   .response-count{font-size:12px; color:var(--text-faint); margin-top:24px;}
 </style>
 </head>
@@ -194,6 +212,34 @@
       <div id="levelsContainer"></div>
     </div>
 
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">eNPS по командам</div>
+        <div class="panel-sub">Та же формула, в разрезе каждого отдела</div>
+        <div id="enpsByTeamContainer"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Engagement по командам</div>
+        <div class="panel-sub">Средний индекс вовлечённости каждой команды</div>
+        <div id="engagementByTeamContainer"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Мотивация по компании</div>
+        <div class="panel-sub">Средний балл по каждому фактору, от важного к менее важному</div>
+        <div id="motivationAggContainer"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">DISC по компании</div>
+        <div class="panel-sub">Средний поведенческий профиль команды</div>
+        <div id="discAggContainer"></div>
+      </div>
+    </div>
+
     <div class="response-count" id="responseCount"></div>
 
   </div>
@@ -234,12 +280,26 @@ function buildCycleList(){
   return list;
 }
 
+let rawMotivation = [];
+let rawDisc = [];
+let nameToTeam = {};
+
 function loadData(){
-  fetch(WEB_APP_URL)
-    .then(res => res.json())
-    .then(data => {
+  Promise.all([
+    fetch(WEB_APP_URL).then(res => res.json()),
+    fetch(WEB_APP_URL + "?type=employees").then(res => res.json())
+  ])
+    .then(([data, employeesData]) => {
       rawEnps = (data.enps || []).slice(1);
       rawEngagement = (data.engagement || []).slice(1);
+      rawMotivation = (data.motivation || []).slice(1);
+      rawDisc = (data.disc || []).slice(1);
+
+      nameToTeam = {};
+      (employeesData.employees || []).forEach(e => {
+        if(e.name && e.team) nameToTeam[e.name.trim()] = e.team;
+      });
+
       cycles = buildCycleList();
       renderTabs();
       selectCycle(0);
@@ -293,6 +353,14 @@ function renderMetrics(){
 
   renderEnps(enpsRows, prevCycle ? rowsInRange(rawEnps, 0, prevCycle.start, prevCycle.end) : []);
   renderEngagement(engagementRows, prevCycle ? rowsInRange(rawEngagement, 0, prevCycle.start, prevCycle.end) : []);
+
+  const motivationRows = rowsInRange(rawMotivation, 0, cycle.start, cycle.end);
+  const discRows = rowsInRange(rawDisc, 0, cycle.start, cycle.end);
+
+  renderEnpsByTeam(enpsRows);
+  renderEngagementByTeam(engagementRows);
+  renderMotivationAgg(motivationRows);
+  renderDiscAgg(discRows);
 
   document.getElementById('responseCount').textContent =
     `Ответов eNPS: ${enpsRows.length} · Ответов Engagement: ${engagementRows.length} · Период: ${cycle.label}`;
@@ -378,6 +446,154 @@ function renderEngagement(rows, prevRows){
       </div>
     `;
   }).join('');
+}
+
+/* ====== ENPS BY TEAM ====== */
+function renderEnpsByTeam(rows){
+  const container = document.getElementById('enpsByTeamContainer');
+  if(rows.length === 0){
+    container.innerHTML = '<p style="color:var(--text-faint); font-size:13px;">Нет ответов за этот период</p>';
+    return;
+  }
+
+  const byTeam = {};
+  rows.forEach(r => {
+    const name = r[1];
+    const team = nameToTeam[String(name).trim()] || 'Без команды';
+    if(!byTeam[team]) byTeam[team] = [];
+    byTeam[team].push(r);
+  });
+
+  const teamNames = Object.keys(byTeam).sort();
+  container.innerHTML = teamNames.map(team => {
+    const teamRows = byTeam[team];
+    const enps = calcEnps(teamRows);
+    return `
+      <div class="team-row">
+        <div>
+          <div class="team-name">${escapeHtmlA(team)}</div>
+          <div class="team-sub">${teamRows.length} ответ${teamRows.length === 1 ? '' : 'ов'}</div>
+        </div>
+        <div class="team-value coral">${enps === null ? '—' : enps}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ====== ENGAGEMENT BY TEAM ====== */
+function renderEngagementByTeam(rows){
+  const container = document.getElementById('engagementByTeamContainer');
+  if(rows.length === 0){
+    container.innerHTML = '<p style="color:var(--text-faint); font-size:13px;">Нет ответов за этот период</p>';
+    return;
+  }
+
+  const byTeam = {};
+  rows.forEach(r => {
+    const team = r[1] || 'Без команды';
+    if(!byTeam[team]) byTeam[team] = [];
+    byTeam[team].push(r);
+  });
+
+  const teamNames = Object.keys(byTeam).sort();
+  container.innerHTML = teamNames.map(team => {
+    const teamRows = byTeam[team];
+    const allAnswers = teamRows.map(r => safeParseAnswers(r[2]));
+    const allValues = allAnswers.flatMap(a => Object.values(a));
+    const avg = allValues.length ? allValues.reduce((a,b) => a+b, 0) / allValues.length : 0;
+    const index = Math.round(avg * 20);
+    return `
+      <div class="team-row">
+        <div>
+          <div class="team-name">${escapeHtmlA(team)}</div>
+          <div class="team-sub">${teamRows.length} ответ${teamRows.length === 1 ? '' : 'ов'}</div>
+        </div>
+        <div class="team-value teal">${index}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ====== MOTIVATION AGGREGATE ====== */
+const MOTIVATION_LABELS_A = {
+  interesting_tasks: "Интересные задачи",
+  recognition: "Признание",
+  autonomy: "Автономность",
+  growth: "Рост",
+  salary: "Доход",
+  manager: "Руководитель",
+  team: "Команда",
+  worklife_balance: "Баланс работы и жизни",
+};
+
+function renderMotivationAgg(rows){
+  const container = document.getElementById('motivationAggContainer');
+  if(rows.length === 0){
+    container.innerHTML = '<p style="color:var(--text-faint); font-size:13px;">Нет ответов за этот период</p>';
+    return;
+  }
+
+  const sums = {}, counts = {};
+  rows.forEach(r => {
+    const factors = safeParseAnswers(r[2]);
+    Object.entries(factors).forEach(([key, val]) => {
+      sums[key] = (sums[key] || 0) + Number(val);
+      counts[key] = (counts[key] || 0) + 1;
+    });
+  });
+
+  const averaged = Object.keys(sums).map(key => ({
+    key, avg: sums[key] / counts[key]
+  })).sort((a,b) => b.avg - a.avg);
+
+  container.innerHTML = averaged.map(({key, avg}) => {
+    const label = MOTIVATION_LABELS_A[key] || key;
+    const pct = (avg / 10) * 100;
+    return `
+      <div class="level-row">
+        <div class="level-label"><span>${label}</span><span>${avg.toFixed(1)} / 10</span></div>
+        <div class="level-bar-track"><div class="level-bar-fill" style="width:${pct}%; background:var(--coral);"></div></div>
+      </div>
+    `;
+  }).join('') + `<p style="color:var(--text-faint); font-size:11px; margin-top:12px;">Ответов: ${rows.length}</p>`;
+}
+
+/* ====== DISC AGGREGATE ====== */
+const DISC_LABELS_A = { D: "Доминирование (D)", I: "Влияние (I)", S: "Стабильность (S)", C: "Соответствие (C)" };
+
+function renderDiscAgg(rows){
+  const container = document.getElementById('discAggContainer');
+  if(rows.length === 0){
+    container.innerHTML = '<p style="color:var(--text-faint); font-size:13px;">Нет ответов за этот период</p>';
+    return;
+  }
+
+  const sums = { D: 0, I: 0, S: 0, C: 0 };
+  rows.forEach(r => {
+    const scores = safeParseAnswers(r[2]);
+    Object.keys(sums).forEach(axis => { sums[axis] += Number(scores[axis] || 0); });
+  });
+
+  const averages = {};
+  Object.keys(sums).forEach(axis => { averages[axis] = sums[axis] / rows.length; });
+  const maxAbs = Math.max(...Object.values(averages).map(v => Math.abs(v)), 1);
+
+  container.innerHTML = Object.keys(DISC_LABELS_A).map(axis => {
+    const val = averages[axis];
+    const pct = Math.min(100, (Math.abs(val) / maxAbs) * 100);
+    return `
+      <div class="level-row">
+        <div class="level-label"><span>${DISC_LABELS_A[axis]}</span><span>${val > 0 ? '+' : ''}${val.toFixed(1)}</span></div>
+        <div class="level-bar-track"><div class="level-bar-fill" style="width:${pct}%;"></div></div>
+      </div>
+    `;
+  }).join('') + `<p style="color:var(--text-faint); font-size:11px; margin-top:12px;">Ответов: ${rows.length}</p>`;
+}
+
+function escapeHtmlA(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 loadData();
