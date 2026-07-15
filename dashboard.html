@@ -374,6 +374,21 @@
   button.send-plan-btn:hover{color:var(--text); border-color:var(--text-faint);}
   button.send-plan-btn:disabled{opacity:.4; cursor:not-allowed;}
 
+  button.meeting-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  button.meeting-btn:hover{color:var(--text); border-color:var(--accent); background:var(--panel-2);}
+  button.meeting-btn:disabled{opacity:.4; cursor:not-allowed;}
+
   /* ===== CAREER TRACKER ===== */
   .career-tabs{display:flex; gap:8px; margin-bottom:20px;}
   .career-tab{
@@ -517,6 +532,20 @@
         <div class="profile-sources" id="profileSources" style="margin-bottom:10px;"></div>
         <button class="back-btn" onclick="resetView()">← К поиску</button>
       </div>
+    </div>
+
+    <!-- Кнопки запуска встреч -->
+    <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+      <button class="meeting-btn" id="btn1on1" onclick="scheduleMeetingFromDashboard('1on1')">
+        📅 1-on-1 с HR
+      </button>
+      <button class="meeting-btn" id="btn360" onclick="scheduleMeetingFromDashboard('360')">
+        📊 Встреча по 360°
+      </button>
+      <button class="meeting-btn" id="btnSalary" onclick="scheduleMeetingFromDashboard('salary')">
+        💰 Пересмотр зарплаты
+      </button>
+      <span class="plan-status" id="meetingStatus" style="align-self:center;"></span>
     </div>
 
     <div class="panel insights-panel">
@@ -1562,6 +1591,56 @@ function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+/* ====== MEETING SCHEDULER FROM DASHBOARD ====== */
+async function scheduleMeetingFromDashboard(type) {
+  if (!currentName) return;
+
+  const status = document.getElementById('meetingStatus');
+  const btnMap = { '1on1': 'btn1on1', '360': 'btn360', 'salary': 'btnSalary' };
+  const labelMap = {
+    '1on1':   '1-on-1 с HR',
+    '360':    'встречу по 360°',
+    'salary': 'встречу по пересмотру зарплаты'
+  };
+  const actionMap = {
+    '1on1':   'schedule_1on1',
+    '360':    'schedule_360_review',
+    'salary': 'schedule_salary_review'
+  };
+
+  const btn = document.getElementById(btnMap[type]);
+  btn.disabled = true;
+  status.textContent = `Запускаю согласование ${labelMap[type]}...`;
+
+  // Для 1-on-1 нужен Slack ID сотрудника
+  let body = { action: actionMap[type], name: currentName };
+  if (type === '1on1') {
+    // Ищем Slack ID в globalRawData
+    const empRows = (globalRawData.employees || []);
+    const emp = empRows.find(e => e.name && e.name.trim() === currentName.trim());
+    if (!emp || !emp.slackId) {
+      status.textContent = 'Не найден Slack ID сотрудника — проверь колонку C в Employees';
+      btn.disabled = false;
+      return;
+    }
+    body.slackId = emp.slackId;
+  }
+
+  try {
+    await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    status.textContent = `✓ Сотруднику отправлены варианты времени в Slack`;
+    status.classList.add('saved');
+  } catch(err) {
+    status.textContent = 'Ошибка — проверь соединение';
+    status.classList.remove('saved');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* ====== INIT ====== */
