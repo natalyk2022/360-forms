@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кандидаты — HR Autopilot</title>
+<style>
+  :root {
+    --bg: #0B0F1E; --panel: #141929; --panel2: #1A2140;
+    --accent: #5B8AF0; --accent2: #3DD9A8;
+    --text: #E8EBF5; --text-dim: #A0AABF; --text-faint: #6B7490;
+    --line: #252D47; --gold: #F5C842; --error: #E0556B;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* LOGIN */
+  .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .login-box { background:var(--panel); border-radius:16px; padding:40px; width:100%; max-width:360px; text-align:center; }
+  .login-logo { font-size:12px; font-weight:700; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:20px; }
+  .login-title { font-size:22px; font-weight:800; margin-bottom:8px; }
+  .login-sub { font-size:14px; color:var(--text-faint); margin-bottom:28px; }
+  .login-input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:15px; padding:12px 16px; border-radius:10px; outline:none; margin-bottom:14px; text-align:center; letter-spacing:4px; }
+  .login-input:focus { border-color:var(--accent); }
+  .login-btn { width:100%; background:var(--accent); color:#fff; border:none; padding:13px; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+  .login-btn:hover { opacity:.85; }
+  .login-error { color:var(--error); font-size:13px; margin-top:10px; display:none; }
+
+  /* MAIN */
+  .wrap { display:none; max-width:1000px; margin:0 auto; padding:32px 20px; }
+  .wrap.show { display:block; }
+
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+  .page-title { font-size:24px; font-weight:800; }
+  .page-title span { color:var(--accent); }
+  .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  select, .filter-input {
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-family:inherit; font-size:13px; padding:9px 14px; border-radius:9px; outline:none;
+  }
+  select:focus, .filter-input:focus { border-color:var(--accent); }
+  select option { background:var(--panel2); }
+
+  /* STATS */
+  .stats-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+  .stat-card { background:var(--panel); border-radius:12px; padding:16px 20px; flex:1; min-width:120px; }
+  .stat-num { font-size:28px; font-weight:800; color:var(--accent); line-height:1; }
+  .stat-label { font-size:12px; color:var(--text-faint); margin-top:4px; }
+
+  /* CANDIDATE CARDS */
+  .cand-card { background:var(--panel); border-radius:12px; padding:20px; margin-bottom:12px; border-left:4px solid var(--line); transition:border-color .15s; }
+  .cand-card:hover { border-left-color:var(--accent); }
+  .cand-card.invited { border-left-color:var(--accent2); }
+  .cand-card.low { border-left-color:var(--error); }
+  .cand-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .cand-name { font-size:16px; font-weight:700; }
+  .cand-meta { font-size:12px; color:var(--text-faint); margin-top:3px; }
+  .cand-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .score-badge { font-size:18px; font-weight:800; padding:6px 14px; border-radius:8px; }
+  .score-high { background:rgba(61,217,168,.12); color:#3DD9A8; }
+  .score-mid  { background:rgba(245,200,66,.12); color:#C9950A; }
+  .score-low  { background:rgba(224,85,107,.12); color:#E0556B; }
+  .verdict-pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; white-space:nowrap; }
+  .verdict-invited { background:rgba(61,217,168,.12); color:#3DD9A8; }
+  .verdict-maybe   { background:rgba(245,200,66,.12); color:#C9950A; }
+  .verdict-no      { background:rgba(224,85,107,.12); color:#E0556B; }
+
+  .cand-body { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .flag-block { }
+  .flag-title { font-size:11px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .flag-item { font-size:13px; color:var(--text-dim); margin-bottom:4px; display:flex; gap:6px; }
+  .flag-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+  .flag-dot.g { background:var(--accent2); }
+  .flag-dot.r { background:var(--error); }
+  .cand-summary { font-size:13px; color:var(--text-dim); font-style:italic; line-height:1.6; padding:12px; background:var(--panel2); border-radius:8px; margin-bottom:12px; }
+  .cand-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .cand-btn { padding:7px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--text-dim); text-decoration:none; display:inline-block; transition:all .15s; }
+  .cand-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .cand-btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .cand-btn.primary:hover { opacity:.85; }
+
+  .empty { text-align:center; padding:60px 20px; color:var(--text-faint); font-size:15px; }
+  .loading { text-align:center; padding:40px; color:var(--text-faint); }
+  .spinner { width:32px; height:32px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  @media (max-width:600px) {
+    .cand-body { grid-template-columns:1fr; }
+    .stats-row { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">HR Autopilot</div>
+    <div class="login-title">Кандидаты</div>
+    <div class="login-sub">Введи пароль для доступа</div>
+    <input type="password" class="login-input" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPwd()">
+    <button class="login-btn" onclick="checkPwd()">Войти</button>
+    <div class="login-error" id="loginError">Неверный пароль</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="wrap" id="mainWrap">
+  <div class="page-header">
+    <div class="page-title">👥 <span>Кандидаты</span></div>
+    <div class="header-right">
+      <select id="vacancyFilter" onchange="filterCandidates()">
+        <option value="">Все вакансии</option>
+      </select>
+      <select id="verdictFilter" onchange="filterCandidates()">
+        <option value="">Все вердикты</option>
+        <option value="Приглашаем">✅ Приглашаем</option>
+        <option value="Доп. оценка">⚠️ Доп. оценка</option>
+        <option value="Не соответствует">❌ Не соответствует</option>
+      </select>
+      <button class="cand-btn" onclick="loadCandidates()">↻ Обновить</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+  <div id="candidatesList"><div class="loading"><div class="spinner"></div>Загружаем кандидатов...</div></div>
+</div>
+
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec';
+const PWD_HASH = 'fc8759bb5f83f04faa8fc52ff1fb7e0ebf832d43c0dc00fe9e15e7c3d7a8b0b6'; // natalyk2026
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPwd() {
+  const pwd = document.getElementById('pwdInput').value;
+  const hash = await sha256(pwd);
+  if (hash === PWD_HASH) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('mainWrap').classList.add('show');
+    loadCandidates();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+document.getElementById('pwdInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPwd(); });
+
+let allCandidates = [];
+
+async function loadCandidates() {
+  document.getElementById('candidatesList').innerHTML = '<div class="loading"><div class="spinner"></div>Загружаем кандидатов...</div>';
+  try {
+    const res = await fetch(WEB_APP_URL + '?type=candidates');
+    const data = await res.json();
+    allCandidates = data.candidates || [];
+    populateFilters(allCandidates);
+    filterCandidates();
+  } catch(err) {
+    document.getElementById('candidatesList').innerHTML = '<div class="empty">Ошибка загрузки: ' + err.message + '</div>';
+  }
+}
+
+function populateFilters(candidates) {
+  const vacancies = [...new Set(candidates.map(c => c.vacancy).filter(Boolean))].sort();
+  const sel = document.getElementById('vacancyFilter');
+  sel.innerHTML = '<option value="">Все вакансии (' + candidates.length + ')</option>';
+  vacancies.forEach(v => {
+    const cnt = candidates.filter(c => c.vacancy === v).length;
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v + ' (' + cnt + ')';
+    sel.appendChild(opt);
+  });
+}
+
+function filterCandidates() {
+  const vacancy = document.getElementById('vacancyFilter').value;
+  const verdict = document.getElementById('verdictFilter').value;
+  let filtered = allCandidates;
+  if (vacancy) filtered = filtered.filter(c => c.vacancy === vacancy);
+  if (verdict) filtered = filtered.filter(c => (c.verdict||'').includes(verdict));
+  renderCandidates(filtered);
+}
+
+function verdictClass(v) {
+  if (!v) return '';
+  if (v.includes('Приглашаем')) return 'verdict-invited';
+  if (v.includes('Требует') || v.includes('дополнительной')) return 'verdict-maybe';
+  return 'verdict-no';
+}
+function verdictShort(v) {
+  return (v||'—').replace('Приглашаем на следующий этап','✅ Приглашаем')
+    .replace('Требует дополнительной оценки','⚠️ Доп. оценка')
+    .replace('Не соответствует','❌ Не соответствует');
+}
+function scoreClass(s) { return s >= 70 ? 'score-high' : s >= 50 ? 'score-mid' : 'score-low'; }
+function scoreEmoji(s) { return s >= 70 ? '🟢' : s >= 50 ? '🟡' : '🔴'; }
+function cardClass(v) {
+  if (!v) return '';
+  if (v.includes('Приглашаем')) return 'invited';
+  if (v.includes('Не соответствует')) return 'low';
+  return '';
+}
+
+function renderCandidates(candidates) {
+  const statsRow = document.getElementById('statsRow');
+  const list = document.getElementById('candidatesList');
+
+  if (candidates.length === 0) {
+    statsRow.innerHTML = '';
+    list.innerHTML = '<div class="empty">Кандидатов нет</div>';
+    return;
+  }
+
+  const total    = candidates.length;
+  const invited  = candidates.filter(c => (c.verdict||'').includes('Приглашаем')).length;
+  const maybe    = candidates.filter(c => (c.verdict||'').includes('Требует')).length;
+  const no       = candidates.filter(c => (c.verdict||'').includes('Не соответствует')).length;
+  const avg      = Math.round(candidates.reduce((s,c) => s+(parseFloat(c.score)||0), 0) / total);
+
+  statsRow.innerHTML = [
+    ['Всего заявок', total, ''],
+    ['Приглашаем', invited, 'color:#3DD9A8'],
+    ['Доп. оценка', maybe, 'color:#C9950A'],
+    ['Не подходит', no, 'color:#E0556B'],
+    ['Средний балл', avg, ''],
+  ].map(([label, num, style]) =>
+    `<div class="stat-card"><div class="stat-num" style="${style}">${num}</div><div class="stat-label">${label}</div></div>`
+  ).join('');
+
+  list.innerHTML = candidates.map(c => {
+    const score = parseFloat(c.score) || 0;
+    const greens = (c.green||'').split(';').filter(Boolean).slice(0,3);
+    const reds   = (c.red||'').split(';').filter(Boolean).slice(0,2);
+
+    const greenHtml = greens.map(f => `<div class="flag-item"><div class="flag-dot g"></div>${f.trim()}</div>`).join('');
+    const redHtml   = reds.map(f => `<div class="flag-item"><div class="flag-dot r"></div>${f.trim()}</div>`).join('');
+
+    const flagsHtml = (greens.length || reds.length) ? `
+      <div class="cand-body">
+        ${greens.length ? `<div class="flag-block"><div class="flag-title">Сильные стороны</div>${greenHtml}</div>` : ''}
+        ${reds.length   ? `<div class="flag-block"><div class="flag-title">Зоны риска</div>${redHtml}</div>` : ''}
+      </div>` : '';
+
+    const pdfBtn  = c.pdfUrl ? `<a href="${c.pdfUrl}" target="_blank" class="cand-btn">📄 Резюме</a>` : '';
+    const mailBtn = c.email  ? `<a href="mailto:${c.email}?subject=Ваша заявка на ${c.vacancy||'вакансию'}" class="cand-btn primary">✉️ Написать</a>` : '';
+
+    return `<div class="cand-card ${cardClass(c.verdict)}">
+      <div class="cand-header">
+        <div>
+          <div class="cand-name">${c.name||'—'}</div>
+          <div class="cand-meta">${c.vacancy||''} · ${c.email||''} · ${c.date||''}</div>
+        </div>
+        <div class="cand-right">
+          <div class="score-badge ${scoreClass(score)}">${scoreEmoji(score)} ${score}</div>
+          <div class="verdict-pill ${verdictClass(c.verdict)}">${verdictShort(c.verdict)}</div>
+        </div>
+      </div>
+      ${flagsHtml}
+      ${c.summary ? `<div class="cand-summary">${c.summary}</div>` : ''}
+      <div class="cand-actions">${mailBtn}${pdfBtn}</div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

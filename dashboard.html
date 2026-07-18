@@ -487,6 +487,29 @@
   }
   .insight-diff-tag.hard{background:var(--hard-soft); color:var(--hard);}
   .insight-diff-tag.soft{background:var(--soft-soft); color:var(--soft);}
+
+  /* CANDIDATES */
+  .cand-card{background:var(--panel);border-radius:12px;padding:20px;margin-bottom:12px;border-left:4px solid var(--line);transition:border-color .15s;}
+  .cand-card:hover{border-left-color:var(--accent);}
+  .cand-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .cand-name{font-size:16px;font-weight:700;color:var(--text);}
+  .cand-meta{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .cand-score{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .score-badge{font-size:18px;font-weight:800;padding:6px 12px;border-radius:8px;}
+  .score-high{background:rgba(61,217,168,.15);color:#3DD9A8;}
+  .score-mid{background:rgba(245,200,66,.15);color:#C9950A;}
+  .score-low{background:rgba(224,85,107,.15);color:#E0556B;}
+  .cand-verdict{font-size:12px;font-weight:600;color:var(--text-faint);}
+  .cand-flags{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
+  .cand-flag{font-size:12px;color:var(--text-dim);}
+  .cand-flag span{color:var(--text-faint);}
+  .cand-summary{font-size:13px;color:var(--text-dim);font-style:italic;line-height:1.5;}
+  .cand-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .cand-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text-dim);text-decoration:none;display:inline-block;transition:all .15s;}
+  .cand-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .stat-chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-align:center;min-width:100px;}
+  .stat-chip-num{font-size:24px;font-weight:800;color:var(--accent);}
+  .stat-chip-label{font-size:11px;color:var(--text-faint);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -509,7 +532,7 @@
     <h1>Найди сотрудника</h1>
     <p class="subtitle">Поиск объединяет самооценку, оценку лида и анонимные оценки коллег по имени.</p>
 
-    <div class="search-box">
+<div class="search-box">
       <input type="text" class="search-input" id="searchInput" placeholder="Начни вводить имя сотрудника...">
       <div class="search-results hidden" id="searchResults"></div>
     </div>
@@ -682,6 +705,21 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ===== БЛОК КАНДИДАТОВ ===== -->
+  <div class="hidden" id="candidatesView">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <h2 style="font-size:20px;font-weight:700;">👥 Кандидаты</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="vacancyFilter" onchange="filterCandidates()" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;outline:none;">
+          <option value="">Все вакансии</option>
+        </select>
+        <button class="back-btn" onclick="hideCandidates()">← К поиску</button>
+      </div>
+    </div>
+    <div id="candidatesStats" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;"></div>
+    <div id="candidatesList"></div>
   </div>
 
 </div>
@@ -1593,7 +1631,95 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
-/* ====== MEETING SCHEDULER FROM DASHBOARD ====== */
+/* ====== CANDIDATES ====== */
+let allCandidates = [];
+
+async function showCandidates() {
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('profileView').classList.add('hidden');
+  document.getElementById('candidatesView').classList.remove('hidden');
+
+  const list = document.getElementById('candidatesList');
+  list.innerHTML = '<div style="color:var(--text-faint);font-size:14px;">Загружаем кандидатов...</div>';
+
+  try {
+    const res = await fetch(WEB_APP_URL + '?type=candidates');
+    const data = await res.json();
+    allCandidates = data.candidates || [];
+    renderCandidates(allCandidates);
+    populateVacancyFilter(allCandidates);
+  } catch(err) {
+    list.innerHTML = '<div style="color:#E0556B;font-size:14px;">Ошибка загрузки: ' + err.message + '</div>';
+  }
+}
+
+function hideCandidates() {
+  document.getElementById('candidatesView').classList.add('hidden');
+  document.getElementById('emptyState').classList.remove('hidden');
+}
+
+function populateVacancyFilter(candidates) {
+  const vacancies = [...new Set(candidates.map(c => c.vacancy).filter(Boolean))].sort();
+  const select = document.getElementById('vacancyFilter');
+  select.innerHTML = '<option value="">Все вакансии (' + candidates.length + ')</option>';
+  vacancies.forEach(v => {
+    const count = candidates.filter(c => c.vacancy === v).length;
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v + ' (' + count + ')';
+    select.appendChild(opt);
+  });
+}
+
+function filterCandidates() {
+  const vacancy = document.getElementById('vacancyFilter').value;
+  const filtered = vacancy ? allCandidates.filter(c => c.vacancy === vacancy) : allCandidates;
+  renderCandidates(filtered);
+}
+
+function renderCandidates(candidates) {
+  const list = document.getElementById('candidatesList');
+  const stats = document.getElementById('candidatesStats');
+
+  if (candidates.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-faint);font-size:14px;text-align:center;padding:40px;">Кандидатов нет</div>';
+    stats.innerHTML = '';
+    return;
+  }
+
+  const total = candidates.length;
+  const invited = candidates.filter(c => c.verdict && c.verdict.includes('Приглашаем')).length;
+  const avg = Math.round(candidates.reduce((s, c) => s + (parseFloat(c.score) || 0), 0) / total);
+  stats.innerHTML =
+    '<div class="stat-chip"><div class="stat-chip-num">' + total + '</div><div class="stat-chip-label">Всего заявок</div></div>' +
+    '<div class="stat-chip"><div class="stat-chip-num" style="color:#3DD9A8;">' + invited + '</div><div class="stat-chip-label">Приглашаем</div></div>' +
+    '<div class="stat-chip"><div class="stat-chip-num">' + avg + '</div><div class="stat-chip-label">Средний балл</div></div>';
+
+  list.innerHTML = candidates.map(function(c) {
+    const score = parseFloat(c.score) || 0;
+    const scoreClass = score >= 70 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+    const scoreEmoji = score >= 70 ? '🟢' : score >= 50 ? '🟡' : '🔴';
+    const verdictShort = (c.verdict || '—')
+      .replace('Приглашаем на следующий этап', 'Приглашаем')
+      .replace('Требует дополнительной оценки', 'Доп. оценка');
+    const green = c.green ? c.green.split(';').filter(Boolean).slice(0,2).map(function(f){ return '<div class="cand-flag"><span>✓ </span>' + f.trim() + '</div>'; }).join('') : '';
+    const red   = c.red   ? c.red.split(';').filter(Boolean).slice(0,1).map(function(f){ return '<div class="cand-flag"><span>⚠ </span>' + f.trim() + '</div>'; }).join('') : '';
+    const pdfBtn  = c.pdfUrl ? '<a href="' + c.pdfUrl + '" target="_blank" class="cand-btn">📄 Резюме</a>' : '';
+    const mailBtn = c.email  ? '<a href="mailto:' + c.email + '" class="cand-btn">✉️ Написать</a>' : '';
+    return '<div class="cand-card">' +
+      '<div class="cand-header">' +
+        '<div><div class="cand-name">' + (c.name||'—') + '</div>' +
+        '<div class="cand-meta">' + (c.vacancy||'') + ' · ' + (c.email||'') + ' · ' + (c.date||'') + '</div></div>' +
+        '<div class="cand-score"><div class="score-badge ' + scoreClass + '">' + scoreEmoji + ' ' + score + '</div>' +
+        '<div class="cand-verdict">' + verdictShort + '</div></div>' +
+      '</div>' +
+      (green||red ? '<div class="cand-flags">' + green + red + '</div>' : '') +
+      (c.summary ? '<div class="cand-summary">' + c.summary + '</div>' : '') +
+      '<div class="cand-actions">' + pdfBtn + mailBtn + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 async function scheduleMeetingFromDashboard(type) {
   if (!currentName) return;
 
