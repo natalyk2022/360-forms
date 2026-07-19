@@ -85,6 +85,39 @@
   .spinner { width:32px; height:32px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
+  /* СТАТУСЫ */
+  .status-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:6px; white-space:nowrap; display:inline-block; }
+  .s-new        { background:#F3F4F6; color:#6B7280; }
+  .s-cv_scoring { background:#EFF6FF; color:#1D4ED8; }
+  .s-elayn      { background:#F0FDF4; color:#15803D; }
+  .s-technical  { background:#FEF3C7; color:#B45309; }
+  .s-hold       { background:#FDF4FF; color:#7E22CE; }
+  .s-offer      { background:#ECFDF5; color:#065F46; }
+  .s-hired      { background:#D1FAE5; color:#064E3B; }
+  .s-rejected   { background:#FEE2E2; color:#991B1B; }
+
+  /* КНОПКИ СТАТУСА */
+  .status-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .status-btn { padding:5px 12px; border-radius:7px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--text-faint); transition:all .15s; }
+  .status-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .status-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .status-btn.danger { border-color:#E0556B; color:#E0556B; }
+  .status-btn.danger:hover { background:#E0556B; color:#fff; }
+  .status-btn.success { border-color:#3DD9A8; color:#3DD9A8; }
+  .status-btn.success:hover { background:#3DD9A8; color:var(--bg); }
+
+  /* МОДАЛЬНОЕ ОКНО */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--panel); border-radius:16px; padding:32px; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; }
+  .modal-title { font-size:20px; font-weight:800; margin-bottom:20px; }
+  .modal-close { float:right; cursor:pointer; font-size:20px; color:var(--text-faint); background:none; border:none; }
+  .offer-text { background:var(--panel2); border-radius:10px; padding:20px; font-size:14px; line-height:1.8; color:var(--text); white-space:pre-wrap; margin-bottom:16px; min-height:200px; }
+  .modal-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .modal-input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:14px; padding:10px 14px; border-radius:9px; outline:none; margin-bottom:12px; }
+  .modal-input:focus { border-color:var(--accent); }
+  .modal-label { font-size:12px; font-weight:600; color:var(--text-faint); margin-bottom:6px; display:block; }
+
   @media (max-width:600px) {
     .cand-body { grid-template-columns:1fr; }
     .stats-row { flex-direction:column; }
@@ -106,6 +139,94 @@
 </div>
 
 <!-- MAIN -->
+<!-- Модаль: Отправить документы -->
+<div class="modal-overlay" id="docsModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('docsModal')">✕</button>
+    <div class="modal-title">📎 Отправить документы</div>
+    <div id="docsModalCandidate" style="font-size:14px;color:var(--text-faint);margin-bottom:20px;"></div>
+
+    <label class="modal-label">Дата старта <span style="color:var(--accent)">*</span></label>
+    <input type="text" class="modal-input" id="docsStartDate" placeholder="01.08.2026">
+
+    <label class="modal-label">Язык письма</label>
+    <select id="docsLang" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:9px;font-size:14px;outline:none;margin-bottom:16px;">
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+    </select>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="cand-btn primary" onclick="generateDocsEmail()">✨ Сгенерировать письмо</button>
+    </div>
+
+    <div id="docsLoading" style="display:none;text-align:center;padding:20px;color:var(--text-faint);">Генерируем письмо...</div>
+
+    <div id="docsEmailPreview" style="display:none;">
+      <label class="modal-label">Тема письма</label>
+      <input type="text" class="modal-input" id="docsSubject" style="margin-bottom:12px;">
+      <label class="modal-label">Текст письма</label>
+      <textarea id="docsBody" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:13px;padding:14px;border-radius:9px;outline:none;min-height:280px;line-height:1.7;resize:vertical;margin-bottom:16px;"></textarea>
+      <div class="modal-actions">
+        <button class="cand-btn primary" onclick="openMailClient()">📧 Открыть в почте</button>
+        <button class="cand-btn" onclick="copyDocsEmail()">📋 Скопировать</button>
+        <button class="cand-btn" onclick="closeModal('docsModal')">Закрыть</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-faint);margin-top:10px;">
+        💡 После открытия в почте прикрепи NDA и контракт вручную
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="mainWrap">
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('leadModal')">✕</button>
+    <div class="modal-title">💬 Обсудить с лидом</div>
+    <label class="modal-label">Кандидат</label>
+    <div id="leadModalCandidate" style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text);"></div>
+    <label class="modal-label">Slack ID лида <span style="color:var(--accent)">*</span></label>
+    <input type="text" class="modal-input" id="leadSlackIdInput" placeholder="U0BDR15SM09 — скопируй из профиля лида в Slack">
+    <div class="modal-actions">
+      <button class="cand-btn primary" onclick="submitLeadThread()">📤 Отправить лиду в Slack</button>
+      <button class="cand-btn" onclick="closeModal('leadModal')">Отмена</button>
+    </div>
+    <div id="leadModalStatus" style="margin-top:12px;font-size:13px;color:var(--accent2);"></div>
+  </div>
+</div>
+
+<!-- Модаль: Оффер -->
+<div class="modal-overlay" id="offerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('offerModal')">✕</button>
+    <div class="modal-title">📄 Оффер-письмо</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <label class="modal-label">Зарплата</label>
+        <input type="text" class="modal-input" id="offerSalary" placeholder="$3 000 / мес" style="margin-bottom:0">
+      </div>
+      <div>
+        <label class="modal-label">Дата выхода</label>
+        <input type="text" class="modal-input" id="offerStart" placeholder="01.08.2026" style="margin-bottom:0">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="cand-btn primary" onclick="generateOffer()">✨ Сгенерировать письмо</button>
+      <select id="offerLang" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;outline:none;">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <div id="offerLoading" style="display:none;text-align:center;padding:20px;color:var(--text-faint);">Генерируем письмо...</div>
+    <div class="offer-text" id="offerText" style="display:none;"></div>
+    <div class="modal-actions" id="offerActions" style="display:none;">
+      <button class="cand-btn" onclick="copyOffer()">📋 Скопировать</button>
+      <button class="cand-btn success" onclick="confirmOffer()">✅ Оффер отправлен</button>
+      <button class="cand-btn" onclick="closeModal('offerModal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap" id="mainWrap">
   <div class="page-header">
     <div class="page-title">👥 <span>Кандидаты</span></div>
@@ -180,6 +301,13 @@ function filterCandidates() {
   renderCandidates(filtered);
 }
 
+const STATUS_LABELS = {
+  'new':'Новый','cv_scoring':'CV скоринг','elayn':'Элайн',
+  'technical':'Техническое','hold':'Hold',
+  'offer':'Оффер','hired':'✅ Принят','rejected':'❌ Отказ',
+};
+const STATUS_ORDER = ['new','cv_scoring','elayn','technical','hold','offer','hired','rejected'];
+
 function verdictClass(v) {
   if (!v) return '';
   if (v.includes('Приглашаем')) return 'verdict-invited';
@@ -193,72 +321,195 @@ function verdictShort(v) {
 }
 function scoreClass(s) { return s >= 70 ? 'score-high' : s >= 50 ? 'score-mid' : 'score-low'; }
 function scoreEmoji(s) { return s >= 70 ? '🟢' : s >= 50 ? '🟡' : '🔴'; }
-function cardClass(v) {
-  if (!v) return '';
-  if (v.includes('Приглашаем')) return 'invited';
-  if (v.includes('Не соответствует')) return 'low';
-  return '';
-}
 
 function renderCandidates(candidates) {
   const statsRow = document.getElementById('statsRow');
   const list = document.getElementById('candidatesList');
-
   if (candidates.length === 0) {
     statsRow.innerHTML = '';
     list.innerHTML = '<div class="empty">Кандидатов нет</div>';
     return;
   }
-
-  const total    = candidates.length;
-  const invited  = candidates.filter(c => (c.verdict||'').includes('Приглашаем')).length;
-  const maybe    = candidates.filter(c => (c.verdict||'').includes('Требует')).length;
-  const no       = candidates.filter(c => (c.verdict||'').includes('Не соответствует')).length;
-  const avg      = Math.round(candidates.reduce((s,c) => s+(parseFloat(c.score)||0), 0) / total);
-
+  const total  = candidates.length;
+  const invited = candidates.filter(c => (c.verdict||'').includes('Приглашаем')).length;
+  const holds  = candidates.filter(c => (c.status||'') === 'hold').length;
+  const avg    = Math.round(candidates.reduce((s,c) => s+(parseFloat(c.score)||0), 0) / total);
   statsRow.innerHTML = [
-    ['Всего заявок', total, ''],
+    ['Всего', total, ''],
     ['Приглашаем', invited, 'color:#3DD9A8'],
-    ['Доп. оценка', maybe, 'color:#C9950A'],
-    ['Не подходит', no, 'color:#E0556B'],
+    ['Hold', holds, 'color:#A855F7'],
     ['Средний балл', avg, ''],
   ].map(([label, num, style]) =>
     `<div class="stat-card"><div class="stat-num" style="${style}">${num}</div><div class="stat-label">${label}</div></div>`
   ).join('');
 
-  list.innerHTML = candidates.map(c => {
-    const score = parseFloat(c.score) || 0;
+  list.innerHTML = candidates.map(function(c) {
+    const score  = parseFloat(c.score) || 0;
+    const status = c.status || 'cv_scoring';
     const greens = (c.green||'').split(';').filter(Boolean).slice(0,3);
     const reds   = (c.red||'').split(';').filter(Boolean).slice(0,2);
-
     const greenHtml = greens.map(f => `<div class="flag-item"><div class="flag-dot g"></div>${f.trim()}</div>`).join('');
     const redHtml   = reds.map(f => `<div class="flag-item"><div class="flag-dot r"></div>${f.trim()}</div>`).join('');
-
-    const flagsHtml = (greens.length || reds.length) ? `
-      <div class="cand-body">
-        ${greens.length ? `<div class="flag-block"><div class="flag-title">Сильные стороны</div>${greenHtml}</div>` : ''}
-        ${reds.length   ? `<div class="flag-block"><div class="flag-title">Зоны риска</div>${redHtml}</div>` : ''}
-      </div>` : '';
-
+    const flagsHtml = (greens.length || reds.length) ? `<div class="cand-body">${greens.length ? `<div class="flag-block"><div class="flag-title">Сильные стороны</div>${greenHtml}</div>` : ''}${reds.length ? `<div class="flag-block"><div class="flag-title">Зоны риска</div>${redHtml}</div>` : ''}</div>` : '';
+    const statusBtns = STATUS_ORDER.map(s => {
+      const cls = s === 'rejected' ? 'danger' : s === 'hired' ? 'success' : '';
+      const active = s === status ? ' active" disabled' : '"';
+      return `<button class="status-btn ${cls}${active} onclick="changeStatus('${c.email}','${c.name}','${c.vacancy}','${s}',this)">${STATUS_LABELS[s]}</button>`;
+    }).join('');
     const pdfBtn  = c.pdfUrl ? `<a href="${c.pdfUrl}" target="_blank" class="cand-btn">📄 Резюме</a>` : '';
-    const mailBtn = c.email  ? `<a href="mailto:${c.email}?subject=Ваша заявка на ${c.vacancy||'вакансию'}" class="cand-btn primary">✉️ Написать</a>` : '';
-
-    return `<div class="cand-card ${cardClass(c.verdict)}">
+    const mailBtn = c.email  ? `<a href="mailto:${c.email}" class="cand-btn primary">✉️ Написать</a>` : '';
+    const cData   = JSON.stringify(c).replace(/"/g, '&quot;');
+    const leadBtn = `<button class="cand-btn" onclick='openLeadModal(${cData})'>💬 Лиду</button>`;
+    const docsBtn = `<button class="cand-btn" onclick='openDocsModal(${cData})'>📎 Документы</button>`;
+    return `<div class="cand-card">
       <div class="cand-header">
-        <div>
-          <div class="cand-name">${c.name||'—'}</div>
-          <div class="cand-meta">${c.vacancy||''} · ${c.email||''} · ${c.date||''}</div>
-        </div>
-        <div class="cand-right">
-          <div class="score-badge ${scoreClass(score)}">${scoreEmoji(score)} ${score}</div>
-          <div class="verdict-pill ${verdictClass(c.verdict)}">${verdictShort(c.verdict)}</div>
-        </div>
+        <div><div class="cand-name">${c.name||'—'}</div><div class="cand-meta">${c.vacancy||''} · ${c.email||''} · ${c.date||''}</div></div>
+        <div class="cand-right"><span class="status-badge s-${status}">${STATUS_LABELS[status]||status}</span><div class="score-badge ${scoreClass(score)}">${scoreEmoji(score)} ${score}</div><div class="verdict-pill ${verdictClass(c.verdict)}">${verdictShort(c.verdict)}</div></div>
       </div>
       ${flagsHtml}
       ${c.summary ? `<div class="cand-summary">${c.summary}</div>` : ''}
-      <div class="cand-actions">${mailBtn}${pdfBtn}</div>
+      <div class="status-btns">${statusBtns}</div>
+      <div class="cand-actions" style="margin-top:12px;">${mailBtn}${pdfBtn}${leadBtn}${offerBtn}${docsBtn}</div>
     </div>`;
   }).join('');
+}
+
+async function changeStatus(email, name, vacancy, newStatus, btn) {
+  btn.disabled = true;
+  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update_candidate_status', email, name, vacancy, status: newStatus }) });
+  const data = await res.json();
+  if (data.ok) {
+    const card = btn.closest('.cand-card');
+    card.querySelector('.status-badge').className = 'status-badge s-' + newStatus;
+    card.querySelector('.status-badge').textContent = STATUS_LABELS[newStatus] || newStatus;
+    card.querySelectorAll('.status-btn').forEach(b => { b.classList.remove('active'); b.disabled = false; });
+    btn.classList.add('active'); btn.disabled = true;
+  }
+  btn.disabled = false;
+}
+
+let currentCandidate = null;
+
+function openLeadModal(candidate) {
+  currentCandidate = candidate;
+  document.getElementById('leadModalCandidate').textContent = candidate.name + ' → ' + candidate.vacancy;
+  document.getElementById('leadSlackIdInput').value = '';
+  document.getElementById('leadModalStatus').textContent = '';
+  document.getElementById('leadModal').classList.add('show');
+}
+
+async function submitLeadThread() {
+  const leadSlackId = document.getElementById('leadSlackIdInput').value.trim();
+  if (!leadSlackId) { document.getElementById('leadModalStatus').textContent = 'Введи Slack ID лида'; return; }
+  document.getElementById('leadModalStatus').textContent = 'Отправляем...';
+  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'create_candidate_thread', leadSlackId, ...currentCandidate }) });
+  const data = await res.json();
+  if (data.ok) {
+    document.getElementById('leadModalStatus').textContent = '✅ Лид получил сообщение в Slack!';
+    setTimeout(() => closeModal('leadModal'), 2000);
+  } else {
+    document.getElementById('leadModalStatus').textContent = '❌ ' + data.error;
+  }
+}
+
+function openOfferModal(candidate) {
+  currentCandidate = candidate;
+  document.getElementById('offerText').style.display = 'none';
+  document.getElementById('offerActions').style.display = 'none';
+  document.getElementById('offerLoading').style.display = 'none';
+  document.querySelector('#offerModal .modal-title').textContent = '📄 Оффер — ' + candidate.name;
+  document.getElementById('offerModal').classList.add('show');
+}
+
+async function generateOffer() {
+  document.getElementById('offerLoading').style.display = 'block';
+  document.getElementById('offerText').style.display = 'none';
+  document.getElementById('offerActions').style.display = 'none';
+  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'generate_offer', name: currentCandidate.name, vacancy: currentCandidate.vacancy, salary: document.getElementById('offerSalary').value, start: document.getElementById('offerStart').value, lang: document.getElementById('offerLang').value }) });
+  const data = await res.json();
+  document.getElementById('offerLoading').style.display = 'none';
+  document.getElementById('offerText').textContent = data.ok ? data.offer : 'Ошибка: ' + data.error;
+  document.getElementById('offerText').style.display = 'block';
+  if (data.ok) document.getElementById('offerActions').style.display = 'flex';
+}
+
+function copyOffer() {
+  navigator.clipboard.writeText(document.getElementById('offerText').textContent).then(() => {
+    const btn = document.querySelector('#offerModal .cand-btn');
+    btn.textContent = '✅ Скопировано!';
+    setTimeout(() => { btn.textContent = '📋 Скопировать'; }, 2000);
+  });
+}
+
+async function confirmOffer() {
+  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update_candidate_status', email: currentCandidate.email, name: currentCandidate.name, vacancy: currentCandidate.vacancy, status: 'offer' }) });
+  closeModal('offerModal');
+  loadCandidates();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show'); });
+
+// ── Модаль: Документы ──
+function openDocsModal(candidate) {
+  currentCandidate = candidate;
+  document.getElementById('docsModalCandidate').textContent = candidate.name + ' · ' + candidate.vacancy + (candidate.email ? ' · ' + candidate.email : '');
+  document.getElementById('docsStartDate').value = '';
+  document.getElementById('docsEmailPreview').style.display = 'none';
+  document.getElementById('docsLoading').style.display = 'none';
+  document.getElementById('docsModal').classList.add('show');
+}
+
+async function generateDocsEmail() {
+  const startDate = document.getElementById('docsStartDate').value.trim();
+  if (!startDate) { document.getElementById('docsStartDate').style.borderColor = 'var(--error)'; return; }
+  document.getElementById('docsStartDate').style.borderColor = '';
+
+  const lang = document.getElementById('docsLang').value;
+  const name = currentCandidate.name || 'кандидат';
+  const vacancy = currentCandidate.vacancy || 'позиция';
+
+  document.getElementById('docsLoading').style.display = 'block';
+  document.getElementById('docsEmailPreview').style.display = 'none';
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'generate_docs_email',
+        name, vacancy, startDate, lang
+      })
+    });
+    const data = await res.json();
+    document.getElementById('docsLoading').style.display = 'none';
+
+    if (data.ok) {
+      document.getElementById('docsSubject').value = data.subject;
+      document.getElementById('docsBody').value = data.body;
+      document.getElementById('docsEmailPreview').style.display = 'block';
+    } else {
+      alert('Ошибка: ' + data.error);
+    }
+  } catch(err) {
+    document.getElementById('docsLoading').style.display = 'none';
+    alert('Ошибка соединения');
+  }
+}
+
+function openMailClient() {
+  const email   = currentCandidate.email || '';
+  const subject = encodeURIComponent(document.getElementById('docsSubject').value);
+  const body    = encodeURIComponent(document.getElementById('docsBody').value);
+  window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+}
+
+function copyDocsEmail() {
+  const text = document.getElementById('docsSubject').value + '\n\n' + document.getElementById('docsBody').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('#docsModal .cand-btn:nth-child(2)');
+    btn.textContent = '✅ Скопировано!';
+    setTimeout(() => { btn.textContent = '📋 Скопировать'; }, 2000);
+  });
 }
 </script>
 </body>
