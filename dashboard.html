@@ -568,7 +568,32 @@
       <button class="meeting-btn" id="btnSalary" onclick="scheduleMeetingFromDashboard('salary')">
         💰 Пересмотр зарплаты
       </button>
+      <button class="meeting-btn" id="btnSummary" onclick="openSummaryModal()">
+        📝 Саммари 1-on-1
+      </button>
       <span class="plan-status" id="meetingStatus" style="align-self:center;"></span>
+    </div>
+
+    <!-- Модаль саммари 1-on-1 -->
+    <div id="summaryOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--panel);border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:18px;font-weight:700;" id="summaryModalTitle">📝 Саммари 1-on-1</div>
+          <button onclick="closeSummaryModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-faint);">✕</button>
+        </div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-faint);display:block;margin-bottom:6px;">Заметки со встречи</label>
+        <textarea id="summaryNotes" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:14px;padding:12px;border-radius:10px;outline:none;min-height:180px;resize:vertical;line-height:1.6;margin-bottom:14px;" placeholder="Обсудили карьерные цели. Хочет вырасти до лида через год. Беспокоит отсутствие фидбека от команды. Договорились о ежемесячных встречах..."></textarea>
+        <button onclick="generateSummary()" style="background:var(--accent);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;">✨ Сгенерировать саммари</button>
+        <div id="summaryLoading" style="display:none;text-align:center;padding:16px;color:var(--text-faint);">Claude анализирует заметки...</div>
+        <div id="summaryResult" style="display:none;">
+          <div style="background:var(--panel-2);border-radius:10px;padding:16px;font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;margin-bottom:12px;" id="summaryText"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="copySummary()" style="padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text-dim);transition:all .15s;">📋 Скопировать</button>
+            <button onclick="saveSummaryToPlan()" style="padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;border:none;">💾 Сохранить в план</button>
+            <button onclick="closeSummaryModal()" style="padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text-dim);">Закрыть</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="panel insights-panel">
@@ -1630,6 +1655,90 @@ function escapeHtml(str) {
   d.textContent = str;
   return d.innerHTML;
 }
+
+/* ====== SUMMARY 1-ON-1 ====== */
+function openSummaryModal() {
+  if (!currentName) return;
+  document.getElementById('summaryModalTitle').textContent = '📝 Саммари 1-on-1 — ' + currentName;
+  document.getElementById('summaryNotes').value = '';
+  document.getElementById('summaryResult').style.display = 'none';
+  document.getElementById('summaryLoading').style.display = 'none';
+  const overlay = document.getElementById('summaryOverlay');
+  overlay.style.display = 'flex';
+}
+
+function closeSummaryModal() {
+  document.getElementById('summaryOverlay').style.display = 'none';
+}
+
+async function generateSummary() {
+  const notes = document.getElementById('summaryNotes').value.trim();
+  if (!notes) { alert('Введи заметки со встречи'); return; }
+
+  document.getElementById('summaryLoading').style.display = 'block';
+  document.getElementById('summaryResult').style.display = 'none';
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'generate_meeting_summary',
+        name: currentName,
+        notes: notes
+      })
+    });
+    const data = await res.json();
+    document.getElementById('summaryLoading').style.display = 'none';
+
+    if (data.ok) {
+      document.getElementById('summaryText').textContent = data.summary;
+      document.getElementById('summaryResult').style.display = 'block';
+    } else {
+      alert('Ошибка: ' + data.error);
+    }
+  } catch(err) {
+    document.getElementById('summaryLoading').style.display = 'none';
+    alert('Ошибка соединения');
+  }
+}
+
+function copySummary() {
+  navigator.clipboard.writeText(document.getElementById('summaryText').textContent).then(() => {
+    const btn = document.querySelector('#summaryResult button');
+    btn.textContent = '✅ Скопировано!';
+    setTimeout(() => { btn.textContent = '📋 Скопировать'; }, 2000);
+  });
+}
+
+async function saveSummaryToPlan() {
+  const summary = document.getElementById('summaryText').textContent;
+  const notes   = document.getElementById('summaryNotes').value.trim();
+  const today   = new Date().toLocaleDateString('ru-RU');
+  const planText = `[1-on-1 ${today}]\n${summary}`;
+
+  try {
+    await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'save_plan',
+        name: currentName,
+        plan: planText
+      })
+    });
+    closeSummaryModal();
+    // Обновляем план в дашборде если он открыт
+    const planArea = document.getElementById('planTextarea');
+    if (planArea) planArea.value = planText;
+    document.getElementById('planStatus') && (document.getElementById('planStatus').textContent = '✅ Саммари сохранено в план');
+  } catch(err) {
+    alert('Ошибка сохранения');
+  }
+}
+
+// Закрытие по клику на фон
+document.getElementById('summaryOverlay') && document.getElementById('summaryOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSummaryModal();
+});
 
 /* ====== CANDIDATES ====== */
 let allCandidates = [];
