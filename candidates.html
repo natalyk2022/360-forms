@@ -360,6 +360,7 @@ function renderCandidates(candidates) {
     const mailBtn = c.email  ? `<a href="mailto:${c.email}" class="cand-btn primary">✉️ Написать</a>` : '';
     const cData   = JSON.stringify(c).replace(/"/g, '&quot;');
     const leadBtn = `<button class="cand-btn" onclick='openLeadModal(${cData})'>💬 Лиду</button>`;
+    const offerBtn= `<button class="cand-btn success" onclick='openOfferModal(${cData})'>📄 Оффер</button>`;
     const docsBtn = `<button class="cand-btn" onclick='openDocsModal(${cData})'>📎 Документы</button>`;
     return `<div class="cand-card">
       <div class="cand-header">
