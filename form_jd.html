@@ -188,6 +188,14 @@
         </label>
         <input type="text" id="requester" placeholder="Иван Петров">
       </div>
+
+      <div class="field">
+        <label>
+          <span data-ru="Slack ID лидов" data-en="Lead Slack IDs">Slack ID лидов</span>
+          <span class="hint" data-ru="(через запятую — добавятся в канал #hiring)" data-en="(comma-separated — will be added to #hiring channel)">(через запятую — добавятся в #hiring канал)</span>
+        </label>
+        <input type="text" id="leadSlackIds" placeholder="U0BDR15SM09, U0BDR15SM10">
+      </div>
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">
@@ -253,7 +261,9 @@ document.getElementById('jdForm').addEventListener('submit', async function(e) {
   const format = document.getElementById('format').value;
   const location = document.getElementById('location').value.trim();
   const salary = document.getElementById('salary').value.trim();
-  const requester = document.getElementById('requester').value.trim();
+  const requester    = document.getElementById('requester').value.trim();
+  const leadSlackIds = document.getElementById('leadSlackIds').value
+    .split(',').map(s => s.trim()).filter(Boolean);
 
   // Показываем загрузку
   document.getElementById('jdForm').style.display = 'none';
@@ -266,7 +276,7 @@ document.getElementById('jdForm').addEventListener('submit', async function(e) {
       method: 'POST',
       body: JSON.stringify({
         action: 'generate_jd',
-        role, team, tasks, requirements, format, location, salary, requester,
+        role, team, tasks, requirements, format, location, salary, requester, leadSlackIds,
         lang: currentLang
       })
     });
