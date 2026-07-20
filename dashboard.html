@@ -1707,10 +1707,23 @@ function openExitDirect() {
 
 async function sendExitLink() {
   const reason = document.getElementById('exitReason').value.trim();
-  if (!reason) { document.getElementById('exitModalStatus').textContent = 'Введи причину увольнения'; return; }
+  if (!reason) {
+    document.getElementById('exitModalStatus').textContent = '⚠️ Введи причину увольнения';
+    document.getElementById('exitModalStatus').style.color = 'var(--err)';
+    return;
+  }
 
   const exitUrl = getExitUrl();
   const lang    = document.getElementById('exitLang').value;
+  const sendBtn = document.querySelector('#exitOverlay button');
+
+  // Показываем состояние загрузки
+  document.getElementById('exitModalStatus').textContent = '⏳ Отправляем...';
+  document.getElementById('exitModalStatus').style.color = 'var(--text-faint)';
+  if (sendBtn) sendBtn.disabled = true;
+
+  // Всегда копируем ссылку в буфер как fallback
+  try { navigator.clipboard.writeText(exitUrl); } catch(e) {}
 
   // Получаем Slack ID сотрудника из таблицы
   let slackId = null;
@@ -1722,14 +1735,15 @@ async function sendExitLink() {
   } catch(err) {}
 
   if (!slackId) {
-    navigator.clipboard.writeText(exitUrl);
-    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована — отправь сотруднику вручную (Slack ID не найден)';
+    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована в буфер — Slack ID не найден, отправь вручную';
+    document.getElementById('exitModalStatus').style.color = 'var(--gold)';
+    if (sendBtn) sendBtn.disabled = false;
     return;
   }
 
   const msg = lang === 'ru'
-    ? `Привет. Нам нужно поговорить о важном.\nПожалуйста, перейди по ссылке для конфиденциального разговора:\n${exitUrl}`
-    : `Hi. We need to discuss something important.\nPlease follow the link for a confidential conversation:\n${exitUrl}`;
+    ? 'Привет. Нам нужно поговорить о важном. Пожалуйста, перейди по ссылке для конфиденциального разговора:\n' + exitUrl
+    : 'Hi. We need to discuss something important. Please follow the link for a confidential conversation:\n' + exitUrl;
 
   try {
     const res = await fetch(WEB_APP_URL, {
@@ -1737,14 +1751,22 @@ async function sendExitLink() {
       body: JSON.stringify({ action: 'send_slack_dm', userId: slackId, text: msg })
     });
     const data = await res.json();
-    document.getElementById('exitModalStatus').textContent = data.ok
-      ? '✅ Ссылка отправлена сотруднику в Slack'
-      : '📋 Ссылка скопирована — отправь вручную';
-    if (!data.ok) navigator.clipboard.writeText(exitUrl);
+    if (data.ok) {
+      document.getElementById('exitModalStatus').textContent = '✅ Сообщение отправлено сотруднику в Slack';
+      document.getElementById('exitModalStatus').style.color = 'var(--accent2)';
+      // Подсвечиваем кнопку в дашборде
+      const exitBtn = document.getElementById('btnExit');
+      if (exitBtn) exitBtn.style.background = '#E0556B33';
+    } else {
+      document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована в буфер — отправь сотруднику вручную';
+      document.getElementById('exitModalStatus').style.color = 'var(--gold)';
+    }
   } catch(err) {
-    navigator.clipboard.writeText(exitUrl);
-    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована — отправь сотруднику вручную';
+    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована в буфер — отправь сотруднику вручную';
+    document.getElementById('exitModalStatus').style.color = 'var(--gold)';
   }
+
+  if (sendBtn) sendBtn.disabled = false;
 }
 
 document.getElementById('exitOverlay') && document.getElementById('exitOverlay').addEventListener('click', function(e) {
