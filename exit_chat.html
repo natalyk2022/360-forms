@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конфиденциальный разговор</title>
+<style>
+:root {
+  --bg:#0B0F1E; --panel:#141929; --panel2:#1A2140;
+  --accent:#5B8AF0; --accent2:#3DD9A8;
+  --text:#E8EBF5; --dim:#A0AABF; --faint:#6B7490;
+  --line:#252D47; --err:#E0556B;
+  --bubble-hr:#1A2140; --bubble-user:#1E3A5F;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+.header{background:var(--panel);padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;}
+.header-icon{width:40px;height:40px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.header-title{font-size:15px;font-weight:700;}
+.header-sub{font-size:12px;color:var(--faint);margin-top:2px;}
+.lang-toggle{margin-left:auto;display:flex;background:var(--panel2);border-radius:8px;overflow:hidden;}
+.lang-btn{padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--faint);transition:all .15s;}
+.lang-btn.active{background:var(--accent);color:#fff;}
+
+/* INTRO SCREEN */
+#introScreen{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+.intro-box{background:var(--panel);border-radius:16px;padding:32px;max-width:480px;width:100%;text-align:center;}
+.intro-icon{font-size:48px;margin-bottom:16px;}
+.intro-title{font-size:22px;font-weight:800;margin-bottom:8px;}
+.intro-sub{font-size:14px;color:var(--dim);line-height:1.6;margin-bottom:24px;}
+.intro-input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:14px;padding:11px 16px;border-radius:10px;outline:none;margin-bottom:10px;}
+.intro-input:focus{border-color:var(--accent);}
+.intro-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.intro-btn:hover{opacity:.85;}
+.intro-note{font-size:12px;color:var(--faint);margin-top:12px;line-height:1.5;}
+
+/* CHAT SCREEN */
+#chatScreen{flex:1;display:none;flex-direction:column;}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
+.msg{display:flex;gap:10px;max-width:80%;}
+.msg.hr{align-self:flex-start;}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px;}
+.msg.hr .msg-avatar{background:var(--accent);}
+.msg.user .msg-avatar{background:var(--panel2);border:1px solid var(--line);}
+.msg-bubble{padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;}
+.msg.hr .msg-bubble{background:var(--bubble-hr);border-bottom-left-radius:4px;}
+.msg.user .msg-bubble{background:var(--bubble-user);border-bottom-right-radius:4px;}
+.msg-time{font-size:11px;color:var(--faint);margin-top:4px;text-align:right;}
+.msg.hr .msg-time{text-align:left;}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 16px;background:var(--bubble-hr);border-radius:14px;border-bottom-left-radius:4px;width:fit-content;}
+.typing span{width:7px;height:7px;background:var(--faint);border-radius:50%;animation:bounce .8s infinite;}
+.typing span:nth-child(2){animation-delay:.15s;}
+.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}}
+
+/* INPUT */
+.input-area{padding:16px 20px;background:var(--panel);border-top:1px solid var(--line);display:flex;gap:10px;align-items:flex-end;}
+.input-wrap{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;display:flex;align-items:flex-end;transition:border-color .15s;}
+.input-wrap:focus-within{border-color:var(--accent);}
+#userInput{flex:1;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:14px;padding:11px 14px;outline:none;resize:none;max-height:120px;line-height:1.5;}
+.send-btn{background:var(--accent);color:#fff;border:none;width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:opacity .15s;flex-shrink:0;}
+.send-btn:hover{opacity:.85;}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* DONE SCREEN */
+#doneScreen{flex:1;display:none;align-items:center;justify-content:center;padding:24px;}
+.done-box{background:var(--panel);border-radius:16px;padding:32px;max-width:480px;width:100%;text-align:center;}
+.done-icon{font-size:48px;margin-bottom:16px;}
+.done-title{font-size:20px;font-weight:800;margin-bottom:8px;}
+.done-sub{font-size:14px;color:var(--dim);line-height:1.6;}
+
+@media(max-width:600px){.msg{max-width:90%;}.intro-box,.done-box{padding:24px;}}
+</style>
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div id="introScreen">
+  <div class="intro-box">
+    <div class="intro-icon">🔒</div>
+    <div class="intro-title" id="introTitle">Конфиденциальный разговор</div>
+    <div class="intro-sub" id="introSub">Этот разговор защищён. Детали переписки не передаются — HR получит только краткое саммари: общий тон и ключевые темы разговора.</div>
+    <input type="text" class="intro-input" id="introName" placeholder="Твоё имя">
+    <button class="intro-btn" onclick="startChat()" id="introBtn">Начать разговор</button>
+    <div class="intro-note" id="introNote">🔒 Разговор защищён. Информация используется только HR-командой для улучшения условий работы.</div>
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:16px;">
+      <button class="lang-btn active" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="chatScreen">
+  <div class="header">
+    <div class="header-icon">🤝</div>
+    <div>
+      <div class="header-title" id="chatTitle">HR Autopilot</div>
+      <div class="header-sub" id="chatSub">Конфиденциальный разговор</div>
+    </div>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <div class="input-wrap">
+      <textarea id="userInput" rows="1" placeholder="Напиши сообщение..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    </div>
+    <button class="send-btn" onclick="sendMessage()" id="sendBtn" disabled>➤</button>
+  </div>
+</div>
+
+<!-- DONE SCREEN -->
+<div id="doneScreen">
+  <div class="done-box">
+    <div class="done-icon">✅</div>
+    <div class="done-title" id="doneTitle">Спасибо за разговор</div>
+    <div class="done-sub" id="doneSub">HR-команда получила информацию и свяжется с тобой в ближайшее время.</div>
+  </div>
+</div>
+
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec';
+
+// Получаем параметры из URL
+const urlParams = new URLSearchParams(window.location.search);
+const MODE     = urlParams.get('mode') || 'company'; // company | self
+const REASON   = decodeURIComponent(urlParams.get('reason') || '');
+const EMP_NAME = decodeURIComponent(urlParams.get('name') || '');
+
+let lang = 'ru';
+let userName = EMP_NAME || '';
+let history = []; // история диалога для Claude
+let isTyping = false;
+let conversationDone = false;
+
+const T = {
+  ru: {
+    introTitle: 'Конфиденциальный разговор',
+    introSub: 'Этот разговор защищён. Детали переписки не передаются — HR получит только краткое саммари: общий тон и ключевые темы разговора.',
+    introBtn: 'Начать разговор',
+    introNote: '📋 Разговор записывается и сохраняется у HR для внутреннего использования вместе с кратким саммари. Это помогает компании улучшать процессы и условия работы.',
+    introPlaceholder: 'Твоё имя',
+    chatSub: 'Конфиденциальный разговор',
+    inputPlaceholder: 'Напиши сообщение...',
+    doneTitle: 'Спасибо за разговор',
+    doneSub: 'HR-команда получила информацию и свяжется с тобой в ближайшее время.',
+  },
+  en: {
+    introTitle: 'Confidential conversation',
+    introSub: 'This conversation is fully confidential. Please enter your name to begin.',
+    introBtn: 'Start conversation',
+    introNote: '📋 This conversation is recorded and shared with HR for internal use along with a brief summary. This helps the company improve processes and working conditions.',
+    introPlaceholder: 'Your name',
+    chatSub: 'Confidential conversation',
+    inputPlaceholder: 'Type a message...',
+    doneTitle: 'Thank you for the conversation',
+    doneSub: 'The HR team has received the information and will be in touch soon.',
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  const t = T[l];
+  document.getElementById('introTitle').textContent = t.introTitle;
+  document.getElementById('introSub').textContent   = t.introSub;
+  document.getElementById('introBtn').textContent   = t.introBtn;
+  document.getElementById('introNote').textContent  = t.introNote;
+  document.getElementById('introName').placeholder  = t.introPlaceholder;
+  document.getElementById('chatSub').textContent    = t.chatSub;
+  document.getElementById('userInput').placeholder  = t.inputPlaceholder;
+}
+
+// Системный промпт в зависимости от сценария
+function getSystemPrompt() {
+  const isRU = lang === 'ru';
+  const name = userName;
+
+  if (MODE === 'company') {
+    // Сценарий А: компания прощается с сотрудником
+    return isRU
+      ? `Ты — HR-партнёр компании. Тебе нужно провести сложный разговор с сотрудником ${name} об увольнении.
+
+Причина увольнения (внутренняя, не озвучивай дословно): ${REASON || 'решение компании'}
+
+Правила:
+1. Начни с тёплого приветствия, скажи что хочешь поговорить о важном
+2. Сообщи об увольнении мягко но чётко — не затягивай
+3. Адаптируй тон под реакцию сотрудника:
+   — спокойно принял → деловой тон, детали оффбординга
+   — расстроен → эмпатия, дай время, отвечай на вопросы
+   — агрессия/обида → де-эскалация, слушай, не спорь, не оправдывайся
+4. Объясни следующие шаги: последний день, расчёт, документы
+5. Заверши разговор достойно — пожелай удачи
+6. Если сотрудник явно завершил разговор или поблагодарил — добавь в конец ответа метку [CONVERSATION_DONE]
+
+Говори как живой человек, с теплом. Не используй шаблонные фразы. Отвечай кратко — 2-4 предложения за раз.`
+      : `You are an HR partner. You need to have a difficult conversation with employee ${name} about their termination.
+
+Reason for termination (internal, don't state verbatim): ${REASON || 'company decision'}
+
+Rules:
+1. Start with a warm greeting, say you need to discuss something important
+2. Communicate the termination gently but clearly — don't delay
+3. Adapt tone to employee's reaction:
+   — calm acceptance → businesslike, focus on offboarding details
+   — upset → empathy, give time, answer questions
+   — anger/resentment → de-escalate, listen, don't argue or justify
+4. Explain next steps: last day, final pay, documents
+5. End the conversation with dignity — wish them well
+6. If the employee has clearly ended the conversation or thanked you — add [CONVERSATION_DONE] at the end
+
+Speak like a real person, with warmth. No template phrases. Keep responses short — 2-4 sentences.`;
+  } else {
+    // Сценарий Б: сотрудник сам хочет уволиться
+    return isRU
+      ? `Ты — HR-партнёр компании. Сотрудник ${name} написал что хочет уволиться.
+
+Твоя задача: выяснить причину и попробовать удержать если это возможно и в интересах обеих сторон.
+
+Правила:
+1. Прими новость спокойно, без давления — не паникуй и не уговаривай сразу
+2. Задавай вопросы чтобы понять настоящую причину (может быть несколько):
+   — условия работы / зарплата
+   — отношения с командой или руководителем
+   — выгорание / нагрузка
+   — внешнее предложение
+   — личные причины
+3. Если причина решаема — предложи конкретное решение (не обещай то чего не можешь)
+4. Если человек твёрдо решил — прими с уважением, помоги с оффбордингом
+5. Адаптируй тон: расстроен → поддержка, злой → де-эскалация, спокоен → деловой
+6. Если разговор завершён — добавь [CONVERSATION_DONE]
+
+Говори как живой человек. Отвечай кратко — 2-4 предложения.`
+      : `You are an HR partner. Employee ${name} has said they want to resign.
+
+Your goal: find out the reason and try to retain them if possible and in both parties' interest.
+
+Rules:
+1. Receive the news calmly, no pressure — don't panic or immediately try to talk them out of it
+2. Ask questions to understand the real reason:
+   — working conditions / salary
+   — relationship with team or manager
+   — burnout / workload
+   — external offer
+   — personal reasons
+3. If the reason is solvable — offer a concrete solution (don't promise what you can't deliver)
+4. If they've firmly decided — accept with respect, help with offboarding
+5. Adapt tone: upset → support, angry → de-escalate, calm → businesslike
+6. If conversation is done — add [CONVERSATION_DONE]
+
+Speak like a real person. Keep responses short — 2-4 sentences.`;
+  }
+}
+
+async function startChat() {
+  const nameInput = document.getElementById('introName').value.trim();
+  if (!nameInput && !EMP_NAME) {
+    document.getElementById('introName').style.borderColor = 'var(--err)';
+    return;
+  }
+  userName = nameInput || EMP_NAME;
+
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('chatScreen').style.display = 'flex';
+
+  // Инициализируем историю с системным промптом
+  history = [{ role: 'system', content: getSystemPrompt() }];
+
+  // Первое сообщение от Claude
+  await getAIResponse();
+}
+
+function addMessage(role, text) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'assistant' ? 'hr' : 'user');
+
+  const avatar = role === 'assistant' ? '🤝' : userName.charAt(0).toUpperCase();
+  const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+  div.innerHTML =
+    '<div class="msg-avatar">' + avatar + '</div>' +
+    '<div><div class="msg-bubble">' + text.replace(/\n/g, '<br>') + '</div>' +
+    '<div class="msg-time">' + time + '</div></div>';
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg hr';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="msg-avatar">🤝</div><div class="typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function getAIResponse() {
+  if (isTyping) return;
+  isTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'exit_chat',
+        messages: history,
+        lang
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+
+    if (data.ok) {
+      let reply = data.reply;
+      const isDone = reply.includes('[CONVERSATION_DONE]');
+      reply = reply.replace('[CONVERSATION_DONE]', '').trim();
+
+      history.push({ role: 'assistant', content: reply });
+      addMessage('assistant', reply);
+
+      if (isDone && !conversationDone) {
+        conversationDone = true;
+        // Отправляем аналитику HR
+        sendSummaryToHR();
+        setTimeout(() => showDone(), 3000);
+      }
+    } else {
+      hideTyping();
+      addMessage('assistant', lang === 'ru' ? 'Произошла ошибка. Попробуй снова.' : 'An error occurred. Please try again.');
+    }
+  } catch(err) {
+    hideTyping();
+    addMessage('assistant', lang === 'ru' ? 'Ошибка соединения.' : 'Connection error.');
+  }
+
+  isTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+async function sendMessage() {
+  if (isTyping || conversationDone) return;
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return; // защита от пустых сообщений
+
+  input.value = '';
+  input.style.height = 'auto';
+  history.push({ role: 'user', content: text });
+  addMessage('user', text);
+  await getAIResponse();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  // Активируем кнопку только если есть текст
+  document.getElementById('sendBtn').disabled = !el.value.trim() || isTyping;
+}
+
+// Автосохранение при закрытии/уходе со страницы
+window.addEventListener('beforeunload', function() {
+  if (history.length > 1 && !conversationDone) {
+    // Отправляем частичный лог если разговор не завершён
+    sendSummaryToHR(true);
+  }
+});
+
+// Сохранение при потере видимости (сворачивание браузера)
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && history.length > 1 && !conversationDone) {
+    sendSummaryToHR(true);
+  }
+});
+
+function showDone() {
+  document.getElementById('chatScreen').style.display = 'none';
+  document.getElementById('doneScreen').style.display = 'flex';
+  const t = T[lang];
+  document.getElementById('doneTitle').textContent = t.doneTitle;
+  document.getElementById('doneSub').textContent   = t.doneSub;
+}
+
+async function sendSummaryToHR(interrupted = false) {
+  if (history.length <= 1) return; // нет диалога — нечего отправлять
+  try {
+    await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'exit_summary',
+        employeeName: userName,
+        mode: MODE,
+        lang,
+        interrupted,
+        fullLog: history.filter(m => m.role !== 'system'), // полный лог
+        history: history.filter(m => m.role !== 'system')
+      })
+    });
+  } catch(err) {
+    console.log('Summary send error:', err);
+  }
+}
+
+// Если имя передано в URL — пропускаем ввод имени
+if (EMP_NAME) {
+  document.getElementById('introName').value = EMP_NAME;
+  document.getElementById('introName').style.display = 'none';
+}
+</script>
+</body>
+</html>
