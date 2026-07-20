@@ -5,513 +5,423 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Кандидаты — HR Autopilot</title>
 <style>
-  :root {
-    --bg: #0B0F1E; --panel: #141929; --panel2: #1A2140;
-    --accent: #5B8AF0; --accent2: #3DD9A8;
-    --text: #E8EBF5; --text-dim: #A0AABF; --text-faint: #6B7490;
-    --line: #252D47; --gold: #F5C842; --error: #E0556B;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+:root {
+  --bg:#0B0F1E; --panel:#141929; --panel2:#1A2140;
+  --accent:#5B8AF0; --accent2:#3DD9A8;
+  --text:#E8EBF5; --dim:#A0AABF; --faint:#6B7490;
+  --line:#252D47; --gold:#F5C842; --err:#E0556B; --purple:#A855F7;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  /* LOGIN */
-  .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-  .login-box { background:var(--panel); border-radius:16px; padding:40px; width:100%; max-width:360px; text-align:center; }
-  .login-logo { font-size:12px; font-weight:700; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:20px; }
-  .login-title { font-size:22px; font-weight:800; margin-bottom:8px; }
-  .login-sub { font-size:14px; color:var(--text-faint); margin-bottom:28px; }
-  .login-input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:15px; padding:12px 16px; border-radius:10px; outline:none; margin-bottom:14px; text-align:center; letter-spacing:4px; }
-  .login-input:focus { border-color:var(--accent); }
-  .login-btn { width:100%; background:var(--accent); color:#fff; border:none; padding:13px; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; transition:opacity .15s; }
-  .login-btn:hover { opacity:.85; }
-  .login-error { color:var(--error); font-size:13px; margin-top:10px; display:none; }
+/* LOGIN */
+#loginWrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--panel);border-radius:16px;padding:40px;width:100%;max-width:360px;text-align:center;}
+.login-logo{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;}
+.login-title{font-size:22px;font-weight:800;margin-bottom:24px;}
+.login-input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:15px;padding:12px 16px;border-radius:10px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:4px;}
+.login-input:focus{border-color:var(--accent);}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
+.login-err{color:var(--err);font-size:13px;margin-top:10px;display:none;}
 
-  /* MAIN */
-  .wrap { display:none; max-width:1000px; margin:0 auto; padding:32px 20px; }
-  .wrap.show { display:block; }
+/* MAIN */
+#mainWrap{display:none;max-width:1000px;margin:0 auto;padding:32px 20px;}
 
-  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
-  .page-title { font-size:24px; font-weight:800; }
-  .page-title span { color:var(--accent); }
-  .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+/* HEADER */
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.pt{font-size:24px;font-weight:800;}
+.pt span{color:var(--accent);}
+.hr{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+select{background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:13px;padding:9px 14px;border-radius:9px;outline:none;}
+select:focus{border-color:var(--accent);}
 
-  select, .filter-input {
-    background:var(--panel); border:1px solid var(--line); color:var(--text);
-    font-family:inherit; font-size:13px; padding:9px 14px; border-radius:9px; outline:none;
-  }
-  select:focus, .filter-input:focus { border-color:var(--accent); }
-  select option { background:var(--panel2); }
+/* STATS */
+.stats{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.stat{background:var(--panel);border-radius:12px;padding:16px 20px;flex:1;min-width:100px;}
+.snum{font-size:28px;font-weight:800;color:var(--accent);line-height:1;}
+.slbl{font-size:12px;color:var(--faint);margin-top:4px;}
 
-  /* STATS */
-  .stats-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
-  .stat-card { background:var(--panel); border-radius:12px; padding:16px 20px; flex:1; min-width:120px; }
-  .stat-num { font-size:28px; font-weight:800; color:var(--accent); line-height:1; }
-  .stat-label { font-size:12px; color:var(--text-faint); margin-top:4px; }
+/* CARDS */
+.card{background:var(--panel);border-radius:12px;padding:20px;margin-bottom:12px;border-left:4px solid var(--line);}
+.ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.cname{font-size:16px;font-weight:700;}
+.cmeta{font-size:12px;color:var(--faint);margin-top:3px;}
+.cr{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sbadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;}
+.s-new{background:#F3F4F6;color:#6B7280;}
+.s-cv_scoring{background:#EFF6FF;color:#1D4ED8;}
+.s-elayn{background:#F0FDF4;color:#15803D;}
+.s-technical{background:#FEF3C7;color:#B45309;}
+.s-hold{background:#FDF4FF;color:#7E22CE;}
+.s-offer{background:#ECFDF5;color:#065F46;}
+.s-hired{background:#D1FAE5;color:#064E3B;}
+.s-rejected{background:#FEE2E2;color:#991B1B;}
+.scbadge{font-size:16px;font-weight:800;padding:5px 12px;border-radius:8px;}
+.sc-hi{background:rgba(61,217,168,.12);color:#3DD9A8;}
+.sc-mi{background:rgba(245,200,66,.12);color:#C9950A;}
+.sc-lo{background:rgba(224,85,107,.12);color:#E0556B;}
+.vbadge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;}
+.v-hi{background:rgba(61,217,168,.12);color:#3DD9A8;}
+.v-mi{background:rgba(245,200,66,.12);color:#C9950A;}
+.v-lo{background:rgba(224,85,107,.12);color:#E0556B;}
 
-  /* CANDIDATE CARDS */
-  .cand-card { background:var(--panel); border-radius:12px; padding:20px; margin-bottom:12px; border-left:4px solid var(--line); transition:border-color .15s; }
-  .cand-card:hover { border-left-color:var(--accent); }
-  .cand-card.invited { border-left-color:var(--accent2); }
-  .cand-card.low { border-left-color:var(--error); }
-  .cand-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-  .cand-name { font-size:16px; font-weight:700; }
-  .cand-meta { font-size:12px; color:var(--text-faint); margin-top:3px; }
-  .cand-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-  .score-badge { font-size:18px; font-weight:800; padding:6px 14px; border-radius:8px; }
-  .score-high { background:rgba(61,217,168,.12); color:#3DD9A8; }
-  .score-mid  { background:rgba(245,200,66,.12); color:#C9950A; }
-  .score-low  { background:rgba(224,85,107,.12); color:#E0556B; }
-  .verdict-pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; white-space:nowrap; }
-  .verdict-invited { background:rgba(61,217,168,.12); color:#3DD9A8; }
-  .verdict-maybe   { background:rgba(245,200,66,.12); color:#C9950A; }
-  .verdict-no      { background:rgba(224,85,107,.12); color:#E0556B; }
+.cbody{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;}
+.ftitle{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.fitem{font-size:13px;color:var(--dim);margin-bottom:4px;display:flex;gap:6px;}
+.fdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.fdot.g{background:var(--accent2);}
+.fdot.r{background:var(--err);}
+.summary{font-size:13px;color:var(--dim);font-style:italic;line-height:1.6;padding:12px;background:var(--panel2);border-radius:8px;margin-bottom:12px;}
 
-  .cand-body { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
-  .flag-block { }
-  .flag-title { font-size:11px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
-  .flag-item { font-size:13px; color:var(--text-dim); margin-bottom:4px; display:flex; gap:6px; }
-  .flag-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:5px; }
-  .flag-dot.g { background:var(--accent2); }
-  .flag-dot.r { background:var(--error); }
-  .cand-summary { font-size:13px; color:var(--text-dim); font-style:italic; line-height:1.6; padding:12px; background:var(--panel2); border-radius:8px; margin-bottom:12px; }
-  .cand-actions { display:flex; gap:8px; flex-wrap:wrap; }
-  .cand-btn { padding:7px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--text-dim); text-decoration:none; display:inline-block; transition:all .15s; }
-  .cand-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .cand-btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .cand-btn.primary:hover { opacity:.85; }
+/* STATUS BUTTONS */
+.sbtns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.sbtn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--faint);transition:all .15s;}
+.sbtn:hover{border-color:var(--accent);color:var(--accent);}
+.sbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.sbtn.danger{border-color:var(--err);color:var(--err);}
+.sbtn.danger:hover{background:var(--err);color:#fff;}
+.sbtn.success{border-color:var(--accent2);color:var(--accent2);}
+.sbtn.success:hover{background:var(--accent2);color:var(--bg);}
 
-  .empty { text-align:center; padding:60px 20px; color:var(--text-faint); font-size:15px; }
-  .loading { text-align:center; padding:40px; color:var(--text-faint); }
-  .spinner { width:32px; height:32px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+/* ACTION BUTTONS */
+.acts{display:flex;gap:8px;flex-wrap:wrap;}
+.abtn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--dim);text-decoration:none;display:inline-block;transition:all .15s;}
+.abtn:hover{border-color:var(--accent);color:var(--accent);}
+.abtn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.abtn.primary:hover{opacity:.85;}
+.abtn.success{border-color:var(--accent2);color:var(--accent2);}
+.abtn.success:hover{background:var(--accent2);color:var(--bg);}
 
-  /* СТАТУСЫ */
-  .status-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:6px; white-space:nowrap; display:inline-block; }
-  .s-new        { background:#F3F4F6; color:#6B7280; }
-  .s-cv_scoring { background:#EFF6FF; color:#1D4ED8; }
-  .s-elayn      { background:#F0FDF4; color:#15803D; }
-  .s-technical  { background:#FEF3C7; color:#B45309; }
-  .s-hold       { background:#FDF4FF; color:#7E22CE; }
-  .s-offer      { background:#ECFDF5; color:#065F46; }
-  .s-hired      { background:#D1FAE5; color:#064E3B; }
-  .s-rejected   { background:#FEE2E2; color:#991B1B; }
+/* MODAL */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.moverlay.open{display:flex;}
+.mbox{background:var(--panel);border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;}
+.mtitle{font-size:18px;font-weight:800;margin-bottom:16px;}
+.mclose{float:right;cursor:pointer;font-size:20px;color:var(--faint);background:none;border:none;margin-top:-4px;}
+.minput{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:14px;padding:10px 14px;border-radius:9px;outline:none;margin-bottom:12px;}
+.minput:focus{border-color:var(--accent);}
+.mlabel{font-size:12px;font-weight:600;color:var(--faint);margin-bottom:6px;display:block;}
+.mactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.offer-text{background:var(--panel2);border-radius:10px;padding:16px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;margin-bottom:12px;min-height:160px;}
+.mstatus{font-size:13px;color:var(--accent2);margin-top:10px;}
+.mhint{font-size:12px;color:var(--faint);margin-top:8px;}
 
-  /* КНОПКИ СТАТУСА */
-  .status-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
-  .status-btn { padding:5px 12px; border-radius:7px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--text-faint); transition:all .15s; }
-  .status-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .status-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .status-btn.danger { border-color:#E0556B; color:#E0556B; }
-  .status-btn.danger:hover { background:#E0556B; color:#fff; }
-  .status-btn.success { border-color:#3DD9A8; color:#3DD9A8; }
-  .status-btn.success:hover { background:#3DD9A8; color:var(--bg); }
-
-  /* МОДАЛЬНОЕ ОКНО */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:20px; }
-  .modal-overlay.show { display:flex; }
-  .modal { background:var(--panel); border-radius:16px; padding:32px; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; }
-  .modal-title { font-size:20px; font-weight:800; margin-bottom:20px; }
-  .modal-close { float:right; cursor:pointer; font-size:20px; color:var(--text-faint); background:none; border:none; }
-  .offer-text { background:var(--panel2); border-radius:10px; padding:20px; font-size:14px; line-height:1.8; color:var(--text); white-space:pre-wrap; margin-bottom:16px; min-height:200px; }
-  .modal-actions { display:flex; gap:10px; flex-wrap:wrap; }
-  .modal-input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:14px; padding:10px 14px; border-radius:9px; outline:none; margin-bottom:12px; }
-  .modal-input:focus { border-color:var(--accent); }
-  .modal-label { font-size:12px; font-weight:600; color:var(--text-faint); margin-bottom:6px; display:block; }
-
-  @media (max-width:600px) {
-    .cand-body { grid-template-columns:1fr; }
-    .stats-row { flex-direction:column; }
-  }
+.empty{text-align:center;padding:60px;color:var(--faint);}
+.loading{text-align:center;padding:40px;color:var(--faint);}
+.spinner{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:600px){.cbody{grid-template-columns:1fr;}.stats{flex-direction:column;}}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div class="login-wrap" id="loginWrap">
+<div id="loginWrap">
   <div class="login-box">
     <div class="login-logo">HR Autopilot</div>
-    <div class="login-title">Кандидаты</div>
-    <div class="login-sub">Введи пароль для доступа</div>
-    <input type="password" class="login-input" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPwd()">
-    <button class="login-btn" onclick="checkPwd()">Войти</button>
-    <div class="login-error" id="loginError">Неверный пароль</div>
+    <div class="login-title">👥 Кандидаты</div>
+    <input type="password" class="login-input" id="pwdInput" placeholder="••••••••" autocomplete="new-password">
+    <button class="login-btn" onclick="login()">Войти</button>
+    <div class="login-err" id="loginErr">Неверный пароль</div>
   </div>
 </div>
 
-<!-- MAIN -->
-<!-- Модаль: Отправить документы -->
-<div class="modal-overlay" id="docsModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('docsModal')">✕</button>
-    <div class="modal-title">📎 Отправить документы</div>
-    <div id="docsModalCandidate" style="font-size:14px;color:var(--text-faint);margin-bottom:20px;"></div>
-
-    <label class="modal-label">Дата старта <span style="color:var(--accent)">*</span></label>
-    <input type="text" class="modal-input" id="docsStartDate" placeholder="01.08.2026">
-
-    <label class="modal-label">Язык письма</label>
-    <select id="docsLang" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:9px;font-size:14px;outline:none;margin-bottom:16px;">
-      <option value="ru">Русский</option>
-      <option value="en">English</option>
-    </select>
-
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button class="cand-btn primary" onclick="generateDocsEmail()">✨ Сгенерировать письмо</button>
+<!-- MODAL: OFFER -->
+<div class="moverlay" id="mOffer">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mOffer')">✕</button>
+    <div class="mtitle" id="mOfferTitle">📄 Оффер</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label class="mlabel">Зарплата</label><input type="text" class="minput" id="mOfferSalary" placeholder="$3 000 / мес" style="margin-bottom:0"></div>
+      <div><label class="mlabel">Дата выхода</label><input type="text" class="minput" id="mOfferStart" placeholder="01.08.2026" style="margin-bottom:0"></div>
     </div>
-
-    <div id="docsLoading" style="display:none;text-align:center;padding:20px;color:var(--text-faint);">Генерируем письмо...</div>
-
-    <div id="docsEmailPreview" style="display:none;">
-      <label class="modal-label">Тема письма</label>
-      <input type="text" class="modal-input" id="docsSubject" style="margin-bottom:12px;">
-      <label class="modal-label">Текст письма</label>
-      <textarea id="docsBody" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:13px;padding:14px;border-radius:9px;outline:none;min-height:280px;line-height:1.7;resize:vertical;margin-bottom:16px;"></textarea>
-      <div class="modal-actions">
-        <button class="cand-btn primary" onclick="openMailClient()">📧 Открыть в почте</button>
-        <button class="cand-btn" onclick="copyDocsEmail()">📋 Скопировать</button>
-        <button class="cand-btn" onclick="closeModal('docsModal')">Закрыть</button>
-      </div>
-      <div style="font-size:12px;color:var(--text-faint);margin-top:10px;">
-        💡 После открытия в почте прикрепи NDA и контракт вручную
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="wrap" id="mainWrap">
-<div class="modal-overlay" id="leadModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('leadModal')">✕</button>
-    <div class="modal-title">💬 Обсудить с лидом</div>
-    <label class="modal-label">Кандидат</label>
-    <div id="leadModalCandidate" style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text);"></div>
-    <label class="modal-label">Slack ID лида <span style="color:var(--accent)">*</span></label>
-    <input type="text" class="modal-input" id="leadSlackIdInput" placeholder="U0BDR15SM09 — скопируй из профиля лида в Slack">
-    <div class="modal-actions">
-      <button class="cand-btn primary" onclick="submitLeadThread()">📤 Отправить лиду в Slack</button>
-      <button class="cand-btn" onclick="closeModal('leadModal')">Отмена</button>
-    </div>
-    <div id="leadModalStatus" style="margin-top:12px;font-size:13px;color:var(--accent2);"></div>
-  </div>
-</div>
-
-<!-- Модаль: Оффер -->
-<div class="modal-overlay" id="offerModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('offerModal')">✕</button>
-    <div class="modal-title">📄 Оффер-письмо</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-      <div>
-        <label class="modal-label">Зарплата</label>
-        <input type="text" class="modal-input" id="offerSalary" placeholder="$3 000 / мес" style="margin-bottom:0">
-      </div>
-      <div>
-        <label class="modal-label">Дата выхода</label>
-        <input type="text" class="modal-input" id="offerStart" placeholder="01.08.2026" style="margin-bottom:0">
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button class="cand-btn primary" onclick="generateOffer()">✨ Сгенерировать письмо</button>
-      <select id="offerLang" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;outline:none;">
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <button class="abtn primary" onclick="genOffer()">✨ Сгенерировать</button>
+      <select id="mOfferLang" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;outline:none;">
         <option value="ru">Русский</option>
         <option value="en">English</option>
       </select>
     </div>
-    <div id="offerLoading" style="display:none;text-align:center;padding:20px;color:var(--text-faint);">Генерируем письмо...</div>
-    <div class="offer-text" id="offerText" style="display:none;"></div>
-    <div class="modal-actions" id="offerActions" style="display:none;">
-      <button class="cand-btn" onclick="copyOffer()">📋 Скопировать</button>
-      <button class="cand-btn success" onclick="confirmOffer()">✅ Оффер отправлен</button>
-      <button class="cand-btn" onclick="closeModal('offerModal')">Закрыть</button>
+    <div id="mOfferLoading" style="display:none;text-align:center;padding:16px;color:var(--faint);">Генерируем...</div>
+    <div class="offer-text" id="mOfferText" style="display:none;"></div>
+    <div class="mactions" id="mOfferActions" style="display:none;">
+      <button class="abtn" onclick="copyText('mOfferText')">📋 Скопировать</button>
+      <button class="abtn success" onclick="confirmOffer()">✅ Оффер отправлен</button>
+      <button class="abtn" onclick="closeModal('mOffer')">Закрыть</button>
     </div>
   </div>
 </div>
 
-<div class="wrap" id="mainWrap">
-  <div class="page-header">
-    <div class="page-title">👥 <span>Кандидаты</span></div>
-    <div class="header-right">
-      <select id="vacancyFilter" onchange="filterCandidates()">
-        <option value="">Все вакансии</option>
+<!-- MODAL: DOCS -->
+<div class="moverlay" id="mDocs">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mDocs')">✕</button>
+    <div class="mtitle" id="mDocsTitle">📎 Документы</div>
+    <label class="mlabel">Дата старта *</label>
+    <input type="text" class="minput" id="mDocsStart" placeholder="01.08.2026">
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <button class="abtn primary" onclick="genDocs()">✨ Сгенерировать письмо</button>
+      <select id="mDocsLang" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;outline:none;">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
       </select>
-      <select id="verdictFilter" onchange="filterCandidates()">
-        <option value="">Все вердикты</option>
-        <option value="Приглашаем">✅ Приглашаем</option>
-        <option value="Доп. оценка">⚠️ Доп. оценка</option>
-        <option value="Не соответствует">❌ Не соответствует</option>
-      </select>
-      <button class="cand-btn" onclick="loadCandidates()">↻ Обновить</button>
+    </div>
+    <div id="mDocsLoading" style="display:none;text-align:center;padding:16px;color:var(--faint);">Генерируем...</div>
+    <div id="mDocsPreview" style="display:none;">
+      <label class="mlabel">Тема</label>
+      <input type="text" class="minput" id="mDocsSubj">
+      <label class="mlabel">Текст</label>
+      <textarea id="mDocsBody" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:13px;padding:12px;border-radius:9px;outline:none;min-height:240px;line-height:1.7;resize:vertical;margin-bottom:12px;"></textarea>
+      <div class="mactions">
+        <button class="abtn primary" onclick="openMail()">📧 Открыть в почте</button>
+        <button class="abtn" onclick="copyDocs()">📋 Скопировать</button>
+        <button class="abtn" onclick="closeModal('mDocs')">Закрыть</button>
+      </div>
+      <div class="mhint">💡 Прикрепи NDA и контракт вручную перед отправкой</div>
     </div>
   </div>
+</div>
 
-  <div class="stats-row" id="statsRow"></div>
-  <div id="candidatesList"><div class="loading"><div class="spinner"></div>Загружаем кандидатов...</div></div>
+<!-- MAIN -->
+<div id="mainWrap">
+  <div class="ph">
+    <div class="pt">👥 <span>Кандидаты</span></div>
+    <div class="hr">
+      <select id="fVacancy" onchange="filter()"><option value="">Все вакансии</option></select>
+      <select id="fVerdict" onchange="filter()">
+        <option value="">Все вердикты</option>
+        <option value="Приглашаем">✅ Приглашаем</option>
+        <option value="Требует">⚠️ Доп. оценка</option>
+        <option value="Не соответствует">❌ Не подходит</option>
+      </select>
+      <button class="abtn" onclick="reload()">↻ Обновить</button>
+    </div>
+  </div>
+  <div class="stats" id="statsRow"></div>
+  <div id="list"><div class="loading"><div class="spinner"></div>Загружаем...</div></div>
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec';
+const URL = 'https://script.google.com/macros/s/AKfycbyyUd8_AkNGo6jUEs4GnfVYxeOaRhtYmVHVo4rqQ5tAxtyHSQOCPzkVFxytJVKNgUcJ/exec';
 const PWD = 'natalyk2026';
 
-function checkPwd() {
-  const pwd = document.getElementById('pwdInput').value;
-  if (pwd === PWD) {
+const SL = {new:'Новый',cv_scoring:'CV скоринг',elayn:'Элайн',technical:'Техническое',hold:'Hold',offer:'Оффер',hired:'✅ Принят',rejected:'❌ Отказ'};
+const SO = ['new','cv_scoring','elayn','technical','hold','offer','hired','rejected'];
+
+let all = [], cur = null;
+
+function login() {
+  const v = document.getElementById('pwdInput').value;
+  if (v === PWD) {
     document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('mainWrap').classList.add('show');
-    loadCandidates();
+    document.getElementById('mainWrap').style.display = 'block';
+    reload();
   } else {
-    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginErr').style.display = 'block';
   }
 }
-document.getElementById('pwdInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPwd(); });
+document.getElementById('pwdInput').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+// Очищаем поле при загрузке — защита от автозаполнения браузера
+window.addEventListener('load', () => { document.getElementById('pwdInput').value = ''; });
 
-let allCandidates = [];
-
-async function loadCandidates() {
-  document.getElementById('candidatesList').innerHTML = '<div class="loading"><div class="spinner"></div>Загружаем кандидатов...</div>';
+async function reload() {
+  document.getElementById('list').innerHTML = '<div class="loading"><div class="spinner"></div>Загружаем...</div>';
   try {
-    const res = await fetch(WEB_APP_URL + '?type=candidates');
-    const data = await res.json();
-    allCandidates = data.candidates || [];
-    populateFilters(allCandidates);
-    filterCandidates();
-  } catch(err) {
-    document.getElementById('candidatesList').innerHTML = '<div class="empty">Ошибка загрузки: ' + err.message + '</div>';
+    const r = await fetch(URL + '?type=candidates');
+    const d = await r.json();
+    all = d.candidates || [];
+    buildFilters();
+    filter();
+  } catch(e) {
+    document.getElementById('list').innerHTML = '<div class="empty">Ошибка: ' + e.message + '</div>';
   }
 }
 
-function populateFilters(candidates) {
-  const vacancies = [...new Set(candidates.map(c => c.vacancy).filter(Boolean))].sort();
-  const sel = document.getElementById('vacancyFilter');
-  sel.innerHTML = '<option value="">Все вакансии (' + candidates.length + ')</option>';
-  vacancies.forEach(v => {
-    const cnt = candidates.filter(c => c.vacancy === v).length;
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = v + ' (' + cnt + ')';
-    sel.appendChild(opt);
+function buildFilters() {
+  const vacs = [...new Set(all.map(c=>c.vacancy).filter(Boolean))].sort();
+  const sel = document.getElementById('fVacancy');
+  sel.innerHTML = '<option value="">Все вакансии (' + all.length + ')</option>';
+  vacs.forEach(v => {
+    const n = all.filter(c=>c.vacancy===v).length;
+    sel.innerHTML += '<option value="'+v+'">'+v+' ('+n+')</option>';
   });
 }
 
-function filterCandidates() {
-  const vacancy = document.getElementById('vacancyFilter').value;
-  const verdict = document.getElementById('verdictFilter').value;
-  let filtered = allCandidates;
-  if (vacancy) filtered = filtered.filter(c => c.vacancy === vacancy);
-  if (verdict) filtered = filtered.filter(c => (c.verdict||'').includes(verdict));
-  renderCandidates(filtered);
+function filter() {
+  const fv = document.getElementById('fVacancy').value;
+  const fd = document.getElementById('fVerdict').value;
+  let list = all;
+  if (fv) list = list.filter(c=>c.vacancy===fv);
+  if (fd) list = list.filter(c=>(c.verdict||'').includes(fd));
+  render(list);
 }
 
-const STATUS_LABELS = {
-  'new':'Новый','cv_scoring':'CV скоринг','elayn':'Элайн',
-  'technical':'Техническое','hold':'Hold',
-  'offer':'Оффер','hired':'✅ Принят','rejected':'❌ Отказ',
-};
-const STATUS_ORDER = ['new','cv_scoring','elayn','technical','hold','offer','hired','rejected'];
+function sc(s) { return s>=70?'sc-hi':s>=50?'sc-mi':'sc-lo'; }
+function se(s) { return s>=70?'🟢':s>=50?'🟡':'🔴'; }
+function vc(v) { return (v||'').includes('Приглашаем')?'v-hi':(v||'').includes('Требует')?'v-mi':'v-lo'; }
+function vs(v) { return (v||'—').replace('Приглашаем на интервью','✅ Приглашаем').replace('Приглашаем на следующий этап','✅ Приглашаем').replace('Требует дополнительной оценки','⚠️ Доп. оценка').replace('Не соответствует','❌ Не подходит'); }
 
-function verdictClass(v) {
-  if (!v) return '';
-  if (v.includes('Приглашаем')) return 'verdict-invited';
-  if (v.includes('Требует') || v.includes('дополнительной')) return 'verdict-maybe';
-  return 'verdict-no';
-}
-function verdictShort(v) {
-  return (v||'—').replace('Приглашаем на следующий этап','✅ Приглашаем')
-    .replace('Требует дополнительной оценки','⚠️ Доп. оценка')
-    .replace('Не соответствует','❌ Не соответствует');
-}
-function scoreClass(s) { return s >= 70 ? 'score-high' : s >= 50 ? 'score-mid' : 'score-low'; }
-function scoreEmoji(s) { return s >= 70 ? '🟢' : s >= 50 ? '🟡' : '🔴'; }
+function render(list) {
+  const stats = document.getElementById('statsRow');
+  const el = document.getElementById('list');
 
-function renderCandidates(candidates) {
-  const statsRow = document.getElementById('statsRow');
-  const list = document.getElementById('candidatesList');
-  if (candidates.length === 0) {
-    statsRow.innerHTML = '';
-    list.innerHTML = '<div class="empty">Кандидатов нет</div>';
-    return;
-  }
-  const total  = candidates.length;
-  const invited = candidates.filter(c => (c.verdict||'').includes('Приглашаем')).length;
-  const holds  = candidates.filter(c => (c.status||'') === 'hold').length;
-  const avg    = Math.round(candidates.reduce((s,c) => s+(parseFloat(c.score)||0), 0) / total);
-  statsRow.innerHTML = [
-    ['Всего', total, ''],
-    ['Приглашаем', invited, 'color:#3DD9A8'],
-    ['Hold', holds, 'color:#A855F7'],
-    ['Средний балл', avg, ''],
-  ].map(([label, num, style]) =>
-    `<div class="stat-card"><div class="stat-num" style="${style}">${num}</div><div class="stat-label">${label}</div></div>`
+  if (!list.length) { stats.innerHTML=''; el.innerHTML='<div class="empty">Кандидатов нет</div>'; return; }
+
+  const total = list.length;
+  const inv = list.filter(c=>(c.verdict||'').includes('Приглашаем')).length;
+  const hold = list.filter(c=>(c.status||'')==='hold').length;
+  const avg = Math.round(list.reduce((s,c)=>s+(parseFloat(c.score)||0),0)/total);
+
+  stats.innerHTML = [['Всего',total,''],['Приглашаем',inv,'color:#3DD9A8'],['Hold',hold,'color:#A855F7'],['Ср. балл',avg,'']].map(([l,n,st])=>
+    '<div class="stat"><div class="snum" style="'+st+'">'+n+'</div><div class="slbl">'+l+'</div></div>'
   ).join('');
 
-  list.innerHTML = candidates.map(function(c) {
-    const score  = parseFloat(c.score) || 0;
+  el.innerHTML = list.map(function(c, idx) {
+    const score = parseFloat(c.score)||0;
     const status = c.status || 'cv_scoring';
     const greens = (c.green||'').split(';').filter(Boolean).slice(0,3);
     const reds   = (c.red||'').split(';').filter(Boolean).slice(0,2);
-    const greenHtml = greens.map(f => `<div class="flag-item"><div class="flag-dot g"></div>${f.trim()}</div>`).join('');
-    const redHtml   = reds.map(f => `<div class="flag-item"><div class="flag-dot r"></div>${f.trim()}</div>`).join('');
-    const flagsHtml = (greens.length || reds.length) ? `<div class="cand-body">${greens.length ? `<div class="flag-block"><div class="flag-title">Сильные стороны</div>${greenHtml}</div>` : ''}${reds.length ? `<div class="flag-block"><div class="flag-title">Зоны риска</div>${redHtml}</div>` : ''}</div>` : '';
-    const statusBtns = STATUS_ORDER.map(s => {
-      const cls = s === 'rejected' ? 'danger' : s === 'hired' ? 'success' : '';
-      const active = s === status ? ' active" disabled' : '"';
-      return `<button class="status-btn ${cls}${active} onclick="changeStatus('${c.email}','${c.name}','${c.vacancy}','${s}',this)">${STATUS_LABELS[s]}</button>`;
+
+    const ghtml = greens.map(f=>'<div class="fitem"><div class="fdot g"></div>'+f.trim()+'</div>').join('');
+    const rhtml = reds.map(f=>'<div class="fitem"><div class="fdot r"></div>'+f.trim()+'</div>').join('');
+    const fbody = (greens.length||reds.length) ? '<div class="cbody">'+(greens.length?'<div><div class="ftitle">Сильные стороны</div>'+ghtml+'</div>':'')+  (reds.length?'<div><div class="ftitle">Зоны риска</div>'+rhtml+'</div>':'')+'</div>' : '';
+
+    const sbtns = SO.map(s => {
+      let cls = 'sbtn';
+      if (s==='rejected') cls+=' danger';
+      else if (s==='hired') cls+=' success';
+      if (s===status) cls+=' active';
+      return '<button class="'+cls+'" onclick="chStatus('+idx+',\''+s+'\',this)">'+SL[s]+'</button>';
     }).join('');
-    const pdfBtn  = c.pdfUrl ? `<a href="${c.pdfUrl}" target="_blank" class="cand-btn">📄 Резюме</a>` : '';
-    const mailBtn = c.email  ? `<a href="mailto:${c.email}" class="cand-btn primary">✉️ Написать</a>` : '';
-    const cData   = JSON.stringify(c).replace(/"/g, '&quot;');
-    const leadBtn = `<button class="cand-btn" onclick='openLeadModal(${cData})'>💬 Лиду</button>`;
-    const offerBtn= `<button class="cand-btn success" onclick='openOfferModal(${cData})'>📄 Оффер</button>`;
-    const docsBtn = `<button class="cand-btn" onclick='openDocsModal(${cData})'>📎 Документы</button>`;
-    return `<div class="cand-card">
-      <div class="cand-header">
-        <div><div class="cand-name">${c.name||'—'}</div><div class="cand-meta">${c.vacancy||''} · ${c.email||''} · ${c.date||''}</div></div>
-        <div class="cand-right"><span class="status-badge s-${status}">${STATUS_LABELS[status]||status}</span><div class="score-badge ${scoreClass(score)}">${scoreEmoji(score)} ${score}</div><div class="verdict-pill ${verdictClass(c.verdict)}">${verdictShort(c.verdict)}</div></div>
-      </div>
-      ${flagsHtml}
-      ${c.summary ? `<div class="cand-summary">${c.summary}</div>` : ''}
-      <div class="status-btns">${statusBtns}</div>
-      <div class="cand-actions" style="margin-top:12px;">${mailBtn}${pdfBtn}${leadBtn}${offerBtn}${docsBtn}</div>
-    </div>`;
+
+    const i = JSON.stringify(idx);
+    return '<div class="card" id="card-'+idx+'">' +
+      '<div class="ch"><div><div class="cname">'+(c.name||'—')+'</div><div class="cmeta">'+(c.vacancy||'')+' · '+(c.email||'')+' · '+(c.date||'')+'</div></div>' +
+      '<div class="cr"><span class="sbadge s-'+status+'" id="sb-'+idx+'">'+SL[status]+'</span><span class="scbadge '+sc(score)+'">'+se(score)+' '+score+'</span><span class="vbadge '+vc(c.verdict)+'">'+vs(c.verdict)+'</span></div></div>' +
+      fbody +
+      (c.summary?'<div class="summary">'+c.summary+'</div>':'') +
+      '<div class="sbtns">'+sbtns+'</div>' +
+      '<div class="acts">' +
+        (c.email?'<a href="mailto:'+c.email+'" class="abtn" id="btn-mail-'+idx+'" onclick="markDone(\'btn-mail-'+idx+'\',\'primary\')">✉️ Написать</a>':'')+
+        (c.pdfUrl?'<a href="'+c.pdfUrl+'" target="_blank" class="abtn">📄 Резюме</a>':'')+
+        (c.threadUrl?'<a href="'+c.threadUrl+'" target="_blank" class="abtn">💬 Тред</a>':'')+
+        '<button class="abtn" id="btn-offer-'+idx+'" onclick="openOffer('+i+')">📄 Оффер</button>'+
+        '<button class="abtn" id="btn-docs-'+idx+'" onclick="openDocs('+i+')">📎 Документы</button>'+
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
-async function changeStatus(email, name, vacancy, newStatus, btn) {
+// STATUS
+async function chStatus(idx, s, btn) {
+  const c = all[idx];
   btn.disabled = true;
-  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update_candidate_status', email, name, vacancy, status: newStatus }) });
-  const data = await res.json();
-  if (data.ok) {
-    const card = btn.closest('.cand-card');
-    card.querySelector('.status-badge').className = 'status-badge s-' + newStatus;
-    card.querySelector('.status-badge').textContent = STATUS_LABELS[newStatus] || newStatus;
-    card.querySelectorAll('.status-btn').forEach(b => { b.classList.remove('active'); b.disabled = false; });
-    btn.classList.add('active'); btn.disabled = true;
+  try {
+    await fetch(URL, {method:'POST', body:JSON.stringify({action:'update_candidate_status', email:c.email, name:c.name, vacancy:c.vacancy, status:s})});
+    all[idx].status = s;
+    document.getElementById('sb-'+idx).className = 'sbadge s-'+s;
+    document.getElementById('sb-'+idx).textContent = SL[s];
+    const card = document.getElementById('card-'+idx);
+    card.querySelectorAll('.sbtn').forEach(b=>{ b.classList.remove('active'); b.disabled=false; });
+    btn.classList.add('active'); btn.disabled=true;
+  } catch(e) { btn.disabled=false; }
+}
+
+async function setStatus(s) {
+  if (!cur) return;
+  await fetch(URL, {method:'POST', body:JSON.stringify({action:'update_candidate_status', email:cur.email, name:cur.name, vacancy:cur.vacancy, status:s})});
+}
+
+// OFFER MODAL
+function openOffer(idx) {
+  cur = {...all[idx], _idx: idx};
+  document.getElementById('mOfferTitle').textContent = '📄 Оффер — ' + cur.name;
+  document.getElementById('mOfferText').style.display = 'none';
+  document.getElementById('mOfferActions').style.display = 'none';
+  document.getElementById('mOfferLoading').style.display = 'none';
+  document.getElementById('mOffer').classList.add('open');
+}
+
+async function genOffer() {
+  document.getElementById('mOfferLoading').style.display = 'block';
+  document.getElementById('mOfferText').style.display = 'none';
+  document.getElementById('mOfferActions').style.display = 'none';
+  const r = await fetch(URL, {method:'POST', body:JSON.stringify({action:'generate_offer', name:cur.name, vacancy:cur.vacancy, salary:document.getElementById('mOfferSalary').value, start:document.getElementById('mOfferStart').value, lang:document.getElementById('mOfferLang').value})});
+  const d = await r.json();
+  document.getElementById('mOfferLoading').style.display = 'none';
+  document.getElementById('mOfferText').textContent = d.ok ? d.offer : 'Ошибка: ' + d.error;
+  document.getElementById('mOfferText').style.display = 'block';
+  if (d.ok) document.getElementById('mOfferActions').style.display = 'flex';
+}
+
+// DOCS MODAL
+function openDocs(idx) {
+  cur = {...all[idx], _idx: idx};
+  document.getElementById('mDocsTitle').textContent = '📎 Документы — ' + cur.name;
+  document.getElementById('mDocsStart').value = '';
+  document.getElementById('mDocsPreview').style.display = 'none';
+  document.getElementById('mDocsLoading').style.display = 'none';
+  document.getElementById('mDocs').classList.add('open');
+}
+
+async function genDocs() {
+  const start = document.getElementById('mDocsStart').value.trim();
+  if (!start) { document.getElementById('mDocsStart').style.borderColor='var(--err)'; return; }
+  document.getElementById('mDocsLoading').style.display = 'block';
+  document.getElementById('mDocsPreview').style.display = 'none';
+  const r = await fetch(URL, {method:'POST', body:JSON.stringify({action:'generate_docs_email', name:cur.name, vacancy:cur.vacancy, startDate:start, lang:document.getElementById('mDocsLang').value})});
+  const d = await r.json();
+  document.getElementById('mDocsLoading').style.display = 'none';
+  if (d.ok) {
+    document.getElementById('mDocsSubj').value = d.subject;
+    document.getElementById('mDocsBody').value = d.body;
+    document.getElementById('mDocsPreview').style.display = 'block';
+  } else { alert('Ошибка: ' + d.error); }
+}
+
+function openMail() {
+  const s = encodeURIComponent(document.getElementById('mDocsSubj').value);
+  const b = encodeURIComponent(document.getElementById('mDocsBody').value);
+  window.open('mailto:' + (cur.email||'') + '?subject=' + s + '&body=' + b, '_blank');
+  // Подсвечиваем кнопку Документы
+  if (cur._idx !== undefined) {
+    markDone('btn-docs-' + cur._idx, 'primary');
   }
-  btn.disabled = false;
-}
-
-let currentCandidate = null;
-
-function openLeadModal(candidate) {
-  currentCandidate = candidate;
-  document.getElementById('leadModalCandidate').textContent = candidate.name + ' → ' + candidate.vacancy;
-  document.getElementById('leadSlackIdInput').value = '';
-  document.getElementById('leadModalStatus').textContent = '';
-  document.getElementById('leadModal').classList.add('show');
-}
-
-async function submitLeadThread() {
-  const leadSlackId = document.getElementById('leadSlackIdInput').value.trim();
-  if (!leadSlackId) { document.getElementById('leadModalStatus').textContent = 'Введи Slack ID лида'; return; }
-  document.getElementById('leadModalStatus').textContent = 'Отправляем...';
-  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'create_candidate_thread', leadSlackId, ...currentCandidate }) });
-  const data = await res.json();
-  if (data.ok) {
-    document.getElementById('leadModalStatus').textContent = '✅ Лид получил сообщение в Slack!';
-    setTimeout(() => closeModal('leadModal'), 2000);
-  } else {
-    document.getElementById('leadModalStatus').textContent = '❌ ' + data.error;
-  }
-}
-
-function openOfferModal(candidate) {
-  currentCandidate = candidate;
-  document.getElementById('offerText').style.display = 'none';
-  document.getElementById('offerActions').style.display = 'none';
-  document.getElementById('offerLoading').style.display = 'none';
-  document.querySelector('#offerModal .modal-title').textContent = '📄 Оффер — ' + candidate.name;
-  document.getElementById('offerModal').classList.add('show');
-}
-
-async function generateOffer() {
-  document.getElementById('offerLoading').style.display = 'block';
-  document.getElementById('offerText').style.display = 'none';
-  document.getElementById('offerActions').style.display = 'none';
-  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'generate_offer', name: currentCandidate.name, vacancy: currentCandidate.vacancy, salary: document.getElementById('offerSalary').value, start: document.getElementById('offerStart').value, lang: document.getElementById('offerLang').value }) });
-  const data = await res.json();
-  document.getElementById('offerLoading').style.display = 'none';
-  document.getElementById('offerText').textContent = data.ok ? data.offer : 'Ошибка: ' + data.error;
-  document.getElementById('offerText').style.display = 'block';
-  if (data.ok) document.getElementById('offerActions').style.display = 'flex';
-}
-
-function copyOffer() {
-  navigator.clipboard.writeText(document.getElementById('offerText').textContent).then(() => {
-    const btn = document.querySelector('#offerModal .cand-btn');
-    btn.textContent = '✅ Скопировано!';
-    setTimeout(() => { btn.textContent = '📋 Скопировать'; }, 2000);
-  });
 }
 
 async function confirmOffer() {
-  await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update_candidate_status', email: currentCandidate.email, name: currentCandidate.name, vacancy: currentCandidate.vacancy, status: 'offer' }) });
-  closeModal('offerModal');
-  loadCandidates();
-}
-
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show'); });
-
-// ── Модаль: Документы ──
-function openDocsModal(candidate) {
-  currentCandidate = candidate;
-  document.getElementById('docsModalCandidate').textContent = candidate.name + ' · ' + candidate.vacancy + (candidate.email ? ' · ' + candidate.email : '');
-  document.getElementById('docsStartDate').value = '';
-  document.getElementById('docsEmailPreview').style.display = 'none';
-  document.getElementById('docsLoading').style.display = 'none';
-  document.getElementById('docsModal').classList.add('show');
-}
-
-async function generateDocsEmail() {
-  const startDate = document.getElementById('docsStartDate').value.trim();
-  if (!startDate) { document.getElementById('docsStartDate').style.borderColor = 'var(--error)'; return; }
-  document.getElementById('docsStartDate').style.borderColor = '';
-
-  const lang = document.getElementById('docsLang').value;
-  const name = currentCandidate.name || 'кандидат';
-  const vacancy = currentCandidate.vacancy || 'позиция';
-
-  document.getElementById('docsLoading').style.display = 'block';
-  document.getElementById('docsEmailPreview').style.display = 'none';
-
-  try {
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'generate_docs_email',
-        name, vacancy, startDate, lang
-      })
-    });
-    const data = await res.json();
-    document.getElementById('docsLoading').style.display = 'none';
-
-    if (data.ok) {
-      document.getElementById('docsSubject').value = data.subject;
-      document.getElementById('docsBody').value = data.body;
-      document.getElementById('docsEmailPreview').style.display = 'block';
-    } else {
-      alert('Ошибка: ' + data.error);
-    }
-  } catch(err) {
-    document.getElementById('docsLoading').style.display = 'none';
-    alert('Ошибка соединения');
+  await setStatus('offer');
+  closeModal('mOffer');
+  // Подсвечиваем кнопку Оффер
+  if (cur._idx !== undefined) {
+    markDone('btn-offer-' + cur._idx, 'success');
   }
+  reload();
 }
 
-function openMailClient() {
-  const email   = currentCandidate.email || '';
-  const subject = encodeURIComponent(document.getElementById('docsSubject').value);
-  const body    = encodeURIComponent(document.getElementById('docsBody').value);
-  window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+function copyDocs() {
+  navigator.clipboard.writeText(document.getElementById('mDocsSubj').value + '\n\n' + document.getElementById('mDocsBody').value);
 }
 
-function copyDocsEmail() {
-  const text = document.getElementById('docsSubject').value + '\n\n' + document.getElementById('docsBody').value;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('#docsModal .cand-btn:nth-child(2)');
-    btn.textContent = '✅ Скопировано!';
-    setTimeout(() => { btn.textContent = '📋 Скопировать'; }, 2000);
-  });
+// UTILS
+function markDone(btnId, cls) {
+  setTimeout(() => {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add(cls || 'primary');
+  }, 500);
 }
+
+function copyText(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('moverlay')) e.target.classList.remove('open');
+});
 </script>
 </body>
 </html>
