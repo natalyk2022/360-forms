@@ -571,10 +571,35 @@
       <button class="meeting-btn" id="btnSummary" onclick="openSummaryModal()">
         📝 Саммари 1-on-1
       </button>
+      <button class="meeting-btn" id="btnExit" onclick="openExitModal()" style="border-color:#E0556B;color:#E0556B;">
+        🚪 Завершить работу
+      </button>
       <span class="plan-status" id="meetingStatus" style="align-self:center;"></span>
     </div>
 
-    <!-- Модаль саммари 1-on-1 -->
+    <!-- Модаль Exit интервью -->
+    <div id="exitOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--panel);border-radius:16px;padding:28px;width:100%;max-width:520px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:18px;font-weight:700;">🚪 Завершить работу</div>
+          <button onclick="closeExitModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-faint);">✕</button>
+        </div>
+        <div style="font-size:14px;color:var(--text-faint);margin-bottom:16px;" id="exitModalName"></div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-faint);display:block;margin-bottom:6px;">Причина увольнения <span style="color:#E0556B">*</span></label>
+        <textarea id="exitReason" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:14px;padding:11px 14px;border-radius:10px;outline:none;min-height:100px;resize:vertical;margin-bottom:14px;" placeholder="Сокращение позиции / Несоответствие ожиданиям / Окончание проекта..."></textarea>
+        <label style="font-size:12px;font-weight:600;color:var(--text-faint);display:block;margin-bottom:6px;">Язык разговора</label>
+        <select id="exitLang" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;outline:none;margin-bottom:16px;">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="sendExitLink()" style="background:#E0556B;color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">📤 Отправить ссылку сотруднику</button>
+          <button onclick="openExitDirect()" style="background:var(--panel-2);border:1px solid var(--line);color:var(--text-dim);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">🔗 Открыть чат</button>
+          <button onclick="closeExitModal()" style="background:transparent;border:1px solid var(--line);color:var(--text-faint);padding:12px 20px;border-radius:10px;font-size:14px;cursor:pointer;">Отмена</button>
+        </div>
+        <div id="exitModalStatus" style="font-size:13px;color:var(--accent2);margin-top:12px;"></div>
+      </div>
+    </div>
     <div id="summaryOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;">
       <div style="background:var(--panel);border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -1655,6 +1680,76 @@ function escapeHtml(str) {
   d.textContent = str;
   return d.innerHTML;
 }
+
+/* ====== EXIT ИНТЕРВЬЮ ====== */
+function openExitModal() {
+  if (!currentName) return;
+  document.getElementById('exitModalName').textContent = 'Сотрудник: ' + currentName;
+  document.getElementById('exitReason').value = '';
+  document.getElementById('exitModalStatus').textContent = '';
+  document.getElementById('exitOverlay').style.display = 'flex';
+}
+
+function closeExitModal() {
+  document.getElementById('exitOverlay').style.display = 'none';
+}
+
+function getExitUrl() {
+  const reason = encodeURIComponent(document.getElementById('exitReason').value.trim());
+  const lang   = document.getElementById('exitLang').value;
+  const name   = encodeURIComponent(currentName || '');
+  return 'https://natalyk2022.github.io/360-forms/exit_chat.html?mode=company&reason=' + reason + '&name=' + name + '&lang=' + lang;
+}
+
+function openExitDirect() {
+  window.open(getExitUrl(), '_blank');
+}
+
+async function sendExitLink() {
+  const reason = document.getElementById('exitReason').value.trim();
+  if (!reason) { document.getElementById('exitModalStatus').textContent = 'Введи причину увольнения'; return; }
+
+  const exitUrl = getExitUrl();
+  const lang    = document.getElementById('exitLang').value;
+
+  // Получаем Slack ID сотрудника из таблицы
+  let slackId = null;
+  try {
+    const empRes = await fetch(WEB_APP_URL + '?type=employees');
+    const empData = await empRes.json();
+    const emp = (empData.employees || []).find(e => e.name && e.name.trim() === currentName.trim());
+    if (emp) slackId = emp.slackId;
+  } catch(err) {}
+
+  if (!slackId) {
+    navigator.clipboard.writeText(exitUrl);
+    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована — отправь сотруднику вручную (Slack ID не найден)';
+    return;
+  }
+
+  const msg = lang === 'ru'
+    ? `Привет. Нам нужно поговорить о важном.\nПожалуйста, перейди по ссылке для конфиденциального разговора:\n${exitUrl}`
+    : `Hi. We need to discuss something important.\nPlease follow the link for a confidential conversation:\n${exitUrl}`;
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'send_slack_dm', userId: slackId, text: msg })
+    });
+    const data = await res.json();
+    document.getElementById('exitModalStatus').textContent = data.ok
+      ? '✅ Ссылка отправлена сотруднику в Slack'
+      : '📋 Ссылка скопирована — отправь вручную';
+    if (!data.ok) navigator.clipboard.writeText(exitUrl);
+  } catch(err) {
+    navigator.clipboard.writeText(exitUrl);
+    document.getElementById('exitModalStatus').textContent = '📋 Ссылка скопирована — отправь сотруднику вручную';
+  }
+}
+
+document.getElementById('exitOverlay') && document.getElementById('exitOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeExitModal();
+});
 
 /* ====== SUMMARY 1-ON-1 ====== */
 function openSummaryModal() {
